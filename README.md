@@ -2,7 +2,7 @@
 
 Sistema de helpdesk multi-empresa com abertura de chamados via email, fluxo de aprovação de solução e SLA automático.
 
-**Demo:** https://helpdesk-ni-teal.vercel.app
+**Demo:** https://helpdesk-pi-teal.vercel.app
 
 ---
 
@@ -119,7 +119,7 @@ Crie sua empresa em `/register`.
 |----------|-----------|
 | `DATABASE_URL` | Connection string PostgreSQL (ex: `postgresql://user:pass@host/db?sslmode=require`) |
 | `AUTH_SECRET` | Segredo para assinar sessões next-auth. Gere com: `openssl rand -base64 32` |
-| `AUTH_URL` | URL base do app (ex: `https://meuapp.vercel.app`) |
+| `AUTH_URL` | URL base do app (ex: `https://helpdesk-pi-teal.vercel.app`) |
 | `NEXTAUTH_URL` | Mesmo valor que `AUTH_URL` |
 | `RESEND_API_KEY` | Chave de API do Resend (começa com `re_`) |
 | `RESEND_FROM_EMAIL` | Endereço de envio verificado no Resend |
@@ -170,7 +170,7 @@ DATABASE_URL="<url-producao>" ./node_modules/.bin/prisma migrate deploy
    - **Priority:** `10`
 4. Em **Inbound** no Resend, crie uma rota:
    - **Match:** `*@tickets.seudominio.com`
-   - **Webhook URL:** `https://seu-app.vercel.app/api/webhooks/email`
+   - **Webhook URL:** `https://helpdesk-pi-teal.vercel.app/api/webhooks/email`
 5. Copie o **Webhook Secret** e adicione como `RESEND_WEBHOOK_SECRET`
 
 ---
