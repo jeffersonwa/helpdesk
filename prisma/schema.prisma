@@ -1,0 +1,102 @@
+generator client {
+  provider = "prisma-client-js"
+  output   = "../node_modules/.prisma/client"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model Company {
+  id        String   @id @default(cuid())
+  name      String
+  slug      String   @unique
+  logo      String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  users    User[]
+  tickets  Ticket[]
+  slaRules SlaRule[]
+}
+
+model User {
+  id        String   @id @default(cuid())
+  name      String
+  email     String   @unique
+  password  String
+  role      Role     @default(CLIENT)
+  companyId String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  company         Company   @relation(fields: [companyId], references: [id])
+  ticketsCreated  Ticket[]  @relation("CreatedBy")
+  ticketsAssigned Ticket[]  @relation("AssignedTo")
+  comments        Comment[]
+}
+
+model Ticket {
+  id           String       @id @default(cuid())
+  title        String
+  description  String
+  status       TicketStatus @default(OPEN)
+  priority     Priority     @default(MEDIUM)
+  companyId    String
+  createdById  String
+  assignedToId String?
+  slaDeadline  DateTime?
+  resolvedAt   DateTime?
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+
+  company    Company   @relation(fields: [companyId], references: [id])
+  createdBy  User      @relation("CreatedBy", fields: [createdById], references: [id])
+  assignedTo User?     @relation("AssignedTo", fields: [assignedToId], references: [id])
+  comments   Comment[]
+}
+
+model Comment {
+  id        String   @id @default(cuid())
+  body      String
+  ticketId  String
+  authorId  String
+  createdAt DateTime @default(now())
+
+  ticket Ticket @relation(fields: [ticketId], references: [id])
+  author User   @relation(fields: [authorId], references: [id])
+}
+
+model SlaRule {
+  id              String   @id @default(cuid())
+  companyId       String
+  priority        Priority
+  responseHours   Int
+  resolutionHours Int
+
+  company Company @relation(fields: [companyId], references: [id])
+
+  @@unique([companyId, priority])
+}
+
+enum Role {
+  SUPERADMIN
+  ADMIN
+  AGENT
+  CLIENT
+}
+
+enum TicketStatus {
+  OPEN
+  IN_PROGRESS
+  WAITING
+  RESOLVED
+  CLOSED
+}
+
+enum Priority {
+  LOW
+  MEDIUM
+  HIGH
+  CRITICAL
+}
