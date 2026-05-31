@@ -8,6 +8,7 @@ const statusLabels: Record<TicketStatus, string> = {
   OPEN: "Aberto",
   IN_PROGRESS: "Em andamento",
   WAITING: "Aguardando",
+  PENDING_APPROVAL: "Aguardando aprovação",
   RESOLVED: "Resolvido",
   CLOSED: "Fechado",
 };

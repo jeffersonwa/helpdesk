@@ -10,6 +10,7 @@ const statusColors: Record<TicketStatus, string> = {
   OPEN: "bg-blue-100 text-blue-700",
   IN_PROGRESS: "bg-yellow-100 text-yellow-700",
   WAITING: "bg-purple-100 text-purple-700",
+  PENDING_APPROVAL: "bg-amber-100 text-amber-700",
   RESOLVED: "bg-green-100 text-green-700",
   CLOSED: "bg-gray-100 text-gray-600",
 };
@@ -18,6 +19,7 @@ const statusLabels: Record<TicketStatus, string> = {
   OPEN: "Aberto",
   IN_PROGRESS: "Em andamento",
   WAITING: "Aguardando",
+  PENDING_APPROVAL: "Aguardando aprovação",
   RESOLVED: "Resolvido",
   CLOSED: "Fechado",
 };

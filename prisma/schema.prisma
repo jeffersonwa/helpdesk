@@ -90,6 +90,7 @@ enum TicketStatus {
   OPEN
   IN_PROGRESS
   WAITING
+  PENDING_APPROVAL
   RESOLVED
   CLOSED
 }
