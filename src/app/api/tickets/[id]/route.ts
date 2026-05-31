@@ -12,12 +12,13 @@ const updateSchema = z.object({
   description: z.string().optional(),
 });
 
-export async function GET(_req: NextRequest, { params }: { params: { id: string } }) {
+export async function GET(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const session = await auth();
   if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
+  const { id } = await params;
   const ticket = await prisma.ticket.findFirst({
-    where: { id: params.id, companyId: session.user.companyId },
+    where: { id, companyId: session.user.companyId },
     include: {
       createdBy: { select: { id: true, name: true, email: true } },
       assignedTo: { select: { id: true, name: true } },
@@ -32,10 +33,11 @@ export async function GET(_req: NextRequest, { params }: { params: { id: string 
   return NextResponse.json(ticket);
 }
 
-export async function PATCH(req: NextRequest, { params }: { params: { id: string } }) {
+export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const session = await auth();
   if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
+  const { id } = await params;
   const body = await req.json();
   const parsed = updateSchema.safeParse(body);
   if (!parsed.success) return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 });
@@ -46,7 +48,7 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
   }
 
   const ticket = await prisma.ticket.update({
-    where: { id: params.id, companyId: session.user.companyId },
+    where: { id, companyId: session.user.companyId },
     data,
   });
 

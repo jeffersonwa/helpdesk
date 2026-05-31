@@ -23,10 +23,11 @@ const priorityLabels: Record<Priority, string> = {
   CRITICAL: "Crítica",
 };
 
-export default async function TicketDetailPage({ params }: { params: { id: string } }) {
+export default async function TicketDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const session = await auth();
+  const { id } = await params;
   const ticket = await prisma.ticket.findFirst({
-    where: { id: params.id, companyId: session!.user.companyId },
+    where: { id, companyId: session!.user.companyId },
     include: {
       createdBy: { select: { id: true, name: true, email: true } },
       assignedTo: { select: { id: true, name: true } },
