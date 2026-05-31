@@ -2,7 +2,7 @@
 
 Sistema de helpdesk multi-empresa com abertura de chamados via email, fluxo de aprovação de solução e SLA automático.
 
-**Demo:** https://helpdesk-pi-teal.vercel.app
+**Demo:** https://helpdesk-ni-teal.vercel.app
 
 ---
 
