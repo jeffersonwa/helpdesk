@@ -45,8 +45,9 @@ model Ticket {
   companyId    String
   createdById  String
   assignedToId String?
-  slaDeadline  DateTime?
-  resolvedAt   DateTime?
+  slaDeadline          DateTime?
+  resolvedAt           DateTime?
+  pendingApprovalSince DateTime?
   createdAt    DateTime     @default(now())
   updatedAt    DateTime     @updatedAt
 

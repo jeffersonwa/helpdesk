@@ -53,8 +53,15 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
 
   const data: Record<string, unknown> = { ...parsed.data, status: effectiveStatus };
 
+  if (effectiveStatus === "PENDING_APPROVAL") {
+    data.pendingApprovalSince = new Date();
+  }
   if (effectiveStatus === "RESOLVED" || effectiveStatus === "CLOSED") {
     data.resolvedAt = new Date();
+    data.pendingApprovalSince = null;
+  }
+  if (effectiveStatus === "IN_PROGRESS" || effectiveStatus === "OPEN") {
+    data.pendingApprovalSince = null;
   }
 
   const ticket = await prisma.ticket.update({
