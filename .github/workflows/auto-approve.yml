@@ -2,9 +2,8 @@ name: Auto-approve tickets sem resposta
 
 on:
   schedule:
-    # Roda a cada hora (UTC)
     - cron: "0 * * * *"
-  workflow_dispatch: # permite rodar manualmente pelo GitHub
+  workflow_dispatch:
 
 jobs:
   auto-approve:
@@ -12,10 +11,15 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Chamar endpoint de auto-aprovação
+        env:
+          APP_URL: ${{ vars.APP_URL || 'https://helpdesk-pi-teal.vercel.app' }}
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}
         run: |
+          echo "Chamando: $APP_URL/api/cron/auto-approve"
+
           response=$(curl -s -w "\n%{http_code}" \
-            -X GET "${{ vars.APP_URL }}/api/cron/auto-approve" \
-            -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}")
+            -X GET "$APP_URL/api/cron/auto-approve" \
+            -H "Authorization: Bearer $CRON_SECRET")
 
           body=$(echo "$response" | head -n -1)
           status=$(echo "$response" | tail -n 1)
@@ -24,8 +28,8 @@ jobs:
           echo "Resposta: $body"
 
           if [ "$status" != "200" ]; then
-            echo "❌ Falha ao executar auto-aprovação (HTTP $status)"
+            echo "Falha ao executar auto-aprovação (HTTP $status)"
             exit 1
           fi
 
-          echo "✅ Auto-aprovação executada com sucesso"
+          echo "Auto-aprovação executada com sucesso"
