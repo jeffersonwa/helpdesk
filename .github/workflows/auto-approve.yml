@@ -10,26 +10,27 @@ jobs:
     name: Verificar tickets aguardando aprovação há +48h
     runs-on: ubuntu-latest
     steps:
-      - name: Chamar endpoint de auto-aprovação
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+
+      - name: Instalar dependências
+        run: npm ci
+
+      - name: Gerar Prisma Client
+        run: npx prisma generate
         env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+
+      - name: Executar auto-aprovação
+        run: node scripts/auto-approve.mjs
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
+          RESEND_FROM_EMAIL: ${{ vars.RESEND_FROM_EMAIL || 'helpdesk@resend.dev' }}
           APP_URL: ${{ vars.APP_URL || 'https://helpdesk-pi-teal.vercel.app' }}
-          CRON_SECRET: ${{ secrets.CRON_SECRET }}
-        run: |
-          echo "Chamando: $APP_URL/api/cron/auto-approve"
-
-          response=$(curl -s -w "\n%{http_code}" \
-            -X GET "$APP_URL/api/cron/auto-approve" \
-            -H "Authorization: Bearer $CRON_SECRET")
-
-          body=$(echo "$response" | head -n -1)
-          status=$(echo "$response" | tail -n 1)
-
-          echo "Status HTTP: $status"
-          echo "Resposta: $body"
-
-          if [ "$status" != "200" ]; then
-            echo "Falha ao executar auto-aprovação (HTTP $status)"
-            exit 1
-          fi
-
-          echo "Auto-aprovação executada com sucesso"
