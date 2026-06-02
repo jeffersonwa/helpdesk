@@ -34,6 +34,7 @@ model User {
   ticketsCreated  Ticket[]  @relation("CreatedBy")
   ticketsAssigned Ticket[]  @relation("AssignedTo")
   comments        Comment[]
+  resetTokens     PasswordResetToken[]
 }
 
 model Ticket {
@@ -78,6 +79,17 @@ model SlaRule {
   company Company @relation(fields: [companyId], references: [id])
 
   @@unique([companyId, priority])
+}
+
+model PasswordResetToken {
+  id        String   @id @default(cuid())
+  token     String   @unique
+  userId    String
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 enum Role {

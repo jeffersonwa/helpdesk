@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { signOut, useSession } from "next-auth/react";
-import { LayoutDashboard, Ticket, Users, BarChart2, LogOut, Settings } from "lucide-react";
+import { LayoutDashboard, Ticket, Users, BarChart2, LogOut, UserCircle } from "lucide-react";
 
 const links = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
@@ -44,14 +44,19 @@ export default function Sidebar() {
       </nav>
 
       <div className="p-4 border-t">
-        <div className="text-sm text-gray-700 font-medium mb-1">{session?.user?.name}</div>
+        <div className="text-sm text-gray-700 font-medium mb-0.5">{session?.user?.name}</div>
         <div className="text-xs text-gray-400 mb-3">{session?.user?.email}</div>
-        <button
-          onClick={() => signOut({ callbackUrl: "/login" })}
-          className="flex items-center gap-2 text-sm text-gray-500 hover:text-red-600 transition-colors"
-        >
-          <LogOut size={16} /> Sair
-        </button>
+        <div className="flex flex-col gap-1">
+          <Link href="/profile" className="flex items-center gap-2 text-sm text-gray-500 hover:text-blue-600 transition-colors">
+            <UserCircle size={16} /> Minha conta
+          </Link>
+          <button
+            onClick={() => signOut({ callbackUrl: "/login" })}
+            className="flex items-center gap-2 text-sm text-gray-500 hover:text-red-600 transition-colors"
+          >
+            <LogOut size={16} /> Sair
+          </button>
+        </div>
       </div>
     </aside>
   );
