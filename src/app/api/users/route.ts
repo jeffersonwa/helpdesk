@@ -10,6 +10,8 @@ const schema = z.object({
   email: z.string().email(),
   password: z.string().min(6),
   role: z.nativeEnum(Role).default("CLIENT"),
+  phone: z.string().optional(),
+  mobile: z.string().optional(),
 });
 
 export async function GET() {
@@ -20,7 +22,7 @@ export async function GET() {
 
   const users = await prisma.user.findMany({
     where: { companyId: session.user.companyId },
-    select: { id: true, name: true, email: true, role: true, createdAt: true },
+    select: { id: true, name: true, email: true, role: true, phone: true, mobile: true, createdAt: true },
   });
 
   return NextResponse.json(users);
@@ -40,7 +42,7 @@ export async function POST(req: NextRequest) {
 
   const user = await prisma.user.create({
     data: { ...parsed.data, password: hash, companyId: session.user.companyId },
-    select: { id: true, name: true, email: true, role: true },
+    select: { id: true, name: true, email: true, role: true, phone: true, mobile: true },
   });
 
   return NextResponse.json(user, { status: 201 });

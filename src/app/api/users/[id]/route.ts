@@ -9,6 +9,8 @@ const updateSchema = z.object({
   name: z.string().min(2).optional(),
   email: z.string().email().optional(),
   role: z.nativeEnum(Role).optional(),
+  phone: z.string().optional(),
+  mobile: z.string().optional(),
 });
 
 const resetSchema = z.object({

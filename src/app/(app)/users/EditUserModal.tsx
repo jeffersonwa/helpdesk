@@ -9,7 +9,7 @@ const roles = [
   { value: "SUPERADMIN", label: "Super Admin" },
 ];
 
-interface User { id: string; name: string; email: string; role: string }
+interface User { id: string; name: string; email: string; role: string; phone?: string | null; mobile?: string | null }
 
 interface Props {
   user: User;
@@ -22,12 +22,12 @@ export default function EditUserModal({ user, currentRole, onClose, onSaved }: P
   const [name, setName] = useState(user.name);
   const [email, setEmail] = useState(user.email);
   const [role, setRole] = useState(user.role);
+  const [phone, setPhone] = useState(user.phone ?? "");
+  const [mobile, setMobile] = useState(user.mobile ?? "");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
-  const availableRoles = currentRole === "SUPERADMIN"
-    ? roles
-    : roles.filter((r) => r.value !== "SUPERADMIN");
+  const availableRoles = currentRole === "SUPERADMIN" ? roles : roles.filter((r) => r.value !== "SUPERADMIN");
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -36,15 +36,12 @@ export default function EditUserModal({ user, currentRole, onClose, onSaved }: P
     const res = await fetch(`/api/users/${user.id}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ name, email, role }),
+      body: JSON.stringify({ name, email, role, phone: phone || undefined, mobile: mobile || undefined }),
     });
     const data = await res.json();
     setLoading(false);
-    if (!res.ok) {
-      setError(typeof data.error === "string" ? data.error : "Erro ao salvar");
-    } else {
-      onSaved();
-    }
+    if (!res.ok) setError(typeof data.error === "string" ? data.error : "Erro ao salvar");
+    else onSaved();
   }
 
   return (
@@ -54,30 +51,30 @@ export default function EditUserModal({ user, currentRole, onClose, onSaved }: P
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Nome</label>
-            <input
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              required
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm text-gray-900 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
+            <input value={name} onChange={(e) => setName(e.target.value)} required
+              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm text-gray-900 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500" />
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
-            <input
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm text-gray-900 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
+            <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required
+              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm text-gray-900 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500" />
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Telefone</label>
+              <input type="tel" value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="(00) 0000-0000"
+                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm text-gray-900 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500" />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Celular</label>
+              <input type="tel" value={mobile} onChange={(e) => setMobile(e.target.value)} placeholder="(00) 00000-0000"
+                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm text-gray-900 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500" />
+            </div>
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Perfil</label>
-            <select
-              value={role}
-              onChange={(e) => setRole(e.target.value)}
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm text-gray-900 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-            >
+            <select value={role} onChange={(e) => setRole(e.target.value)}
+              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm text-gray-900 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500">
               {availableRoles.map((r) => (
                 <option key={r.value} value={r.value}>{r.label}</option>
               ))}
@@ -85,18 +82,12 @@ export default function EditUserModal({ user, currentRole, onClose, onSaved }: P
           </div>
           {error && <p className="text-red-500 text-sm bg-red-50 p-2 rounded-lg">{error}</p>}
           <div className="flex gap-3 pt-2">
-            <button
-              type="button"
-              onClick={onClose}
-              className="flex-1 border border-gray-200 rounded-lg py-2 text-sm text-gray-600 hover:bg-gray-50"
-            >
+            <button type="button" onClick={onClose}
+              className="flex-1 border border-gray-200 rounded-lg py-2 text-sm text-gray-600 hover:bg-gray-50">
               Cancelar
             </button>
-            <button
-              type="submit"
-              disabled={loading}
-              className="flex-1 bg-blue-600 text-white rounded-lg py-2 text-sm font-medium hover:bg-blue-700 disabled:opacity-60"
-            >
+            <button type="submit" disabled={loading}
+              className="flex-1 bg-blue-600 text-white rounded-lg py-2 text-sm font-medium hover:bg-blue-700 disabled:opacity-60">
               {loading ? "Salvando..." : "Salvar alterações"}
             </button>
           </div>

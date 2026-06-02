@@ -26,6 +26,8 @@ model User {
   email     String   @unique
   password  String
   role      Role     @default(CLIENT)
+  phone     String?
+  mobile    String?
   companyId String
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
