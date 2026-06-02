@@ -22,7 +22,7 @@ export default function Sidebar() {
   return (
     <aside className="w-64 min-h-screen bg-white border-r flex flex-col">
       <div className="px-5 py-4 border-b">
-        <Image src="/logo.jpeg" alt="Ni Tecnologia" width={140} height={50} className="object-contain" priority />
+        <Image src="/logo.jpeg" alt="Ni Tecnologia" width={160} height={56} className="object-contain w-40" priority />
         <p className="text-xs text-gray-400 mt-2">{session?.user?.companyName}</p>
       </div>
 

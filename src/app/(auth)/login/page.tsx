@@ -37,7 +37,7 @@ function LoginForm() {
     <div className="min-h-screen flex items-center justify-center bg-gray-50">
       <div className="w-full max-w-md bg-white rounded-2xl shadow p-8">
         <div className="flex justify-center mb-6">
-          <Image src="/logo.jpeg" alt="Ni Tecnologia" width={180} height={64} className="object-contain" priority />
+          <Image src="/logo.jpeg" alt="Ni Tecnologia" width={220} height={80} className="object-contain" priority />
         </div>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
