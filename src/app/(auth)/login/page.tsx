@@ -66,12 +66,6 @@ function LoginForm() {
             {loading ? "Entrando..." : "Entrar"}
           </button>
         </form>
-        <p className="mt-4 text-center text-sm text-gray-600">
-          Não tem conta?{" "}
-          <Link href="/register" className="text-blue-600 hover:underline">
-            Registrar empresa
-          </Link>
-        </p>
       </div>
     </div>
   );

@@ -3,12 +3,13 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { signOut, useSession } from "next-auth/react";
-import { LayoutDashboard, Ticket, Users, BarChart2, LogOut, UserCircle } from "lucide-react";
+import { LayoutDashboard, Ticket, Users, BarChart2, LogOut, UserCircle, Building2 } from "lucide-react";
 
 const links = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
   { href: "/tickets", label: "Tickets", icon: Ticket },
   { href: "/users", label: "Usuários", icon: Users, roles: ["ADMIN", "SUPERADMIN"] },
+  { href: "/companies", label: "Empresas", icon: Building2, roles: ["SUPERADMIN"] },
   { href: "/reports", label: "Relatórios", icon: BarChart2, roles: ["ADMIN", "SUPERADMIN", "AGENT"] },
 ];
 
