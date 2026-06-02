@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { signOut, useSession } from "next-auth/react";
 import { LayoutDashboard, Ticket, Users, BarChart2, LogOut, UserCircle, Building2 } from "lucide-react";
@@ -20,9 +21,9 @@ export default function Sidebar() {
 
   return (
     <aside className="w-64 min-h-screen bg-white border-r flex flex-col">
-      <div className="p-6 border-b">
-        <h1 className="font-bold text-lg text-blue-600">Helpdesk</h1>
-        <p className="text-xs text-gray-500 mt-1">{session?.user?.companyName}</p>
+      <div className="px-5 py-4 border-b">
+        <Image src="/logo.jpeg" alt="Ni Tecnologia" width={140} height={50} className="object-contain" priority />
+        <p className="text-xs text-gray-400 mt-2">{session?.user?.companyName}</p>
       </div>
 
       <nav className="flex-1 p-4 space-y-1">
