@@ -1,28 +1,37 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { sendEmail } from "@/lib/email";
-import { createHmac, timingSafeEqual } from "crypto";
-
-// Verificar assinatura HMAC do Resend
-function verifySignature(rawBody: string, signature: string, secret: string): boolean {
-  if (!signature || !secret) return false;
-  try {
-    const expected = createHmac("sha256", secret).update(rawBody).digest("hex");
-    const sig = signature.replace(/^sha256=/, "");
-    return timingSafeEqual(Buffer.from(sig, "hex"), Buffer.from(expected, "hex"));
-  } catch {
-    return false;
-  }
-}
+import { Resend } from "resend";
 
 export async function POST(req: NextRequest) {
   const rawBody = await req.text();
-  const signature = req.headers.get("x-resend-signature") ?? "";
   const secret = process.env.RESEND_WEBHOOK_SECRET ?? "";
 
   // Em desenvolvimento sem secret configurado, aceitar sem verificar
-  if (secret && !verifySignature(rawBody, signature, secret)) {
-    return NextResponse.json({ error: "Invalid signature" }, { status: 401 });
+  if (secret) {
+    const svixId = req.headers.get("svix-id") ?? "";
+    const svixTimestamp = req.headers.get("svix-timestamp") ?? "";
+    const svixSignature = req.headers.get("svix-signature") ?? "";
+
+    if (!svixId || !svixTimestamp || !svixSignature) {
+      return NextResponse.json({ error: "Missing Svix headers" }, { status: 401 });
+    }
+
+    try {
+      const resend = new Resend(process.env.RESEND_API_KEY ?? "placeholder");
+      resend.webhooks.verify({
+        payload: rawBody,
+        headers: {
+          id: svixId,
+          timestamp: svixTimestamp,
+          signature: svixSignature,
+        },
+        webhookSecret: secret,
+      });
+    } catch (err: any) {
+      console.error("[webhook] Signature verification failed:", err.message);
+      return NextResponse.json({ error: "Invalid signature" }, { status: 401 });
+    }
   }
 
   let payload: {
