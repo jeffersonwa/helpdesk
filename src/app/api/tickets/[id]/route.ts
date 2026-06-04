@@ -72,10 +72,10 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
     },
   });
 
-  // Notificar criador quando entra em aprovação
+  // Notificar criador quando entra em aprovação (sem bloquear a resposta)
   if (effectiveStatus === "PENDING_APPROVAL") {
     const approvalUrl = `${process.env.NEXTAUTH_URL}/tickets/${ticket.id}`;
-    await sendEmail({
+    sendEmail({
       to: ticket.createdBy.email,
       subject: `[Chamado #${ticket.id.slice(-6)}] Solução aguardando sua aprovação`,
       html: `
@@ -86,7 +86,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
         <br>
         <p style="color:#6b7280;font-size:12px">Se você já resolveu seu problema, clique em Aprovar. Caso contrário, clique em Rejeitar e o chamado será reaberto.</p>
       `,
-    });
+    }).catch((err) => console.error("[email] Falha ao notificar aprovação:", err));
   }
 
   return NextResponse.json(ticket);

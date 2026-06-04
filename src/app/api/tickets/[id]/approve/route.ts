@@ -48,10 +48,10 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
     },
   });
 
-  // Notificar agente responsável
+  // Notificar agente responsável (sem bloquear a resposta)
   if (ticket.assignedTo?.email) {
     const actionLabel = parsed.data.action === "approve" ? "aprovada ✅" : "rejeitada ❌";
-    await sendEmail({
+    sendEmail({
       to: ticket.assignedTo.email,
       subject: `[Chamado #${ticket.id.slice(-6)}] Solução ${actionLabel}`,
       html: `
@@ -62,7 +62,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
           : "<p>O chamado foi <strong>fechado</strong> com sucesso.</p>"}
         <p><a href="${process.env.NEXTAUTH_URL}/tickets/${ticket.id}">Ver chamado</a></p>
       `,
-    });
+    }).catch((err) => console.error("[email] Falha ao notificar agente:", err));
   }
 
   return NextResponse.json(updated);
