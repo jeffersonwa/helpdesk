@@ -27,8 +27,10 @@ export default async function DashboardPage() {
   const session = await auth();
   const companyId = session!.user.companyId;
   const isClient = session!.user.role === "CLIENT";
+  const isSuperAdmin = session!.user.role === "SUPERADMIN";
 
-  const where: any = { companyId };
+  // SUPERADMIN vê todos os tickets de todas as empresas
+  const where: any = isSuperAdmin ? {} : { companyId };
   if (isClient) where.createdById = session!.user.id;
 
   const [total, open, inProgress, slaBreached, recent] = await Promise.all([
@@ -36,7 +38,7 @@ export default async function DashboardPage() {
     prisma.ticket.count({ where: { ...where, status: "OPEN" } }),
     prisma.ticket.count({ where: { ...where, status: "IN_PROGRESS" } }),
     prisma.ticket.count({ where: { ...where, slaDeadline: { lt: new Date() }, status: { notIn: ["RESOLVED", "CLOSED"] } } }),
-    prisma.ticket.findMany({ where, orderBy: { createdAt: "desc" }, take: 5, include: { createdBy: { select: { name: true } } } }),
+    prisma.ticket.findMany({ where, orderBy: { createdAt: "desc" }, take: 5, include: { createdBy: { select: { name: true } }, company: { select: { name: true } } } }),
   ]);
 
   const stats = [
@@ -71,7 +73,11 @@ export default async function DashboardPage() {
             <Link key={t.id} href={`/tickets/${t.id}`} className="flex items-center justify-between py-3 border-b last:border-0 hover:bg-gray-50 -mx-2 px-2 rounded-lg transition-colors">
               <div>
                 <p className="font-medium text-sm">{t.title}</p>
-                <p className="text-xs text-gray-400 mt-0.5">por {t.createdBy.name} • {formatDistanceToNow(t.createdAt, { locale: ptBR, addSuffix: true })}</p>
+                <p className="text-xs text-gray-400 mt-0.5">
+                  por {t.createdBy.name}
+                  {isSuperAdmin && <span className="ml-1 text-purple-500">• {(t as any).company?.name}</span>}
+                  {" • "}{formatDistanceToNow(t.createdAt, { locale: ptBR, addSuffix: true })}
+                </p>
               </div>
               <span className={`text-xs px-2 py-1 rounded-full font-medium ${statusColors[t.status]}`}>{statusLabels[t.status]}</span>
             </Link>

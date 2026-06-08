@@ -46,8 +46,9 @@ export default async function TicketsPage({
   const session = await auth();
   const companyId = session!.user.companyId;
   const isClient = session!.user.role === "CLIENT";
+  const isSuperAdmin = session!.user.role === "SUPERADMIN";
 
-  const where: any = { companyId };
+  const where: any = isSuperAdmin ? {} : { companyId };
   if (isClient) where.createdById = session!.user.id;
   if (searchParams.status) where.status = searchParams.status;
   if (searchParams.priority) where.priority = searchParams.priority;
@@ -57,6 +58,7 @@ export default async function TicketsPage({
     include: {
       createdBy: { select: { name: true } },
       assignedTo: { select: { name: true } },
+      company: { select: { name: true } },
       _count: { select: { comments: true } },
     },
     orderBy: { createdAt: "desc" },
@@ -81,6 +83,7 @@ export default async function TicketsPage({
               <th className="text-left px-4 py-3 font-medium text-gray-600">SLA</th>
               <th className="text-left px-4 py-3 font-medium text-gray-600">Aberto</th>
               {!isClient && <th className="text-left px-4 py-3 font-medium text-gray-600">Solicitante</th>}
+              {isSuperAdmin && <th className="text-left px-4 py-3 font-medium text-gray-600">Empresa</th>}
             </tr>
           </thead>
           <tbody>
@@ -107,6 +110,7 @@ export default async function TicketsPage({
                   </td>
                   <td className="px-4 py-3 text-gray-400 text-xs">{formatDistanceToNow(t.createdAt, { locale: ptBR, addSuffix: true })}</td>
                   {!isClient && <td className="px-4 py-3 text-gray-500">{t.createdBy.name}</td>}
+                  {isSuperAdmin && <td className="px-4 py-3"><span className="text-xs bg-purple-50 text-purple-700 px-2 py-1 rounded-full">{(t as any).company?.name}</span></td>}
                 </tr>
               );
             })}

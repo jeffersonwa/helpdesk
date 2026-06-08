@@ -19,7 +19,9 @@ export async function GET(req: NextRequest) {
   const status = searchParams.get("status") as TicketStatus | null;
   const priority = searchParams.get("priority") as Priority | null;
 
-  const where: any = { companyId: session.user.companyId };
+  // SUPERADMIN vê todos os tickets de todas as empresas
+  const isSuperAdmin = session.user.role === "SUPERADMIN";
+  const where: any = isSuperAdmin ? {} : { companyId: session.user.companyId };
   if (session.user.role === "CLIENT") where.createdById = session.user.id;
   if (status) where.status = status;
   if (priority) where.priority = priority;
@@ -29,6 +31,7 @@ export async function GET(req: NextRequest) {
     include: {
       createdBy: { select: { id: true, name: true } },
       assignedTo: { select: { id: true, name: true } },
+      company: { select: { id: true, name: true } },
       _count: { select: { comments: true } },
     },
     orderBy: { createdAt: "desc" },

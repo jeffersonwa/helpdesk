@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import CreateCompanyForm from "./CreateCompanyForm";
+import DeleteCompanyButton from "./DeleteCompanyButton";
 
 export default async function CompaniesPage() {
   const session = await auth();
@@ -28,7 +29,12 @@ export default async function CompaniesPage() {
           {companies.map((c) => (
             <div key={c.id} className="bg-white rounded-2xl shadow-sm border p-5 flex items-center justify-between">
               <div>
-                <p className="font-semibold text-gray-900">{c.name}</p>
+                <div className="flex items-center gap-2">
+                  <p className="font-semibold text-gray-900">{c.name}</p>
+                  {c.id === session!.user.companyId && (
+                    <span className="text-xs bg-blue-100 text-blue-600 px-2 py-0.5 rounded-full">sua empresa</span>
+                  )}
+                </div>
                 <p className="text-xs text-gray-400 mt-0.5">/{c.slug}</p>
                 <div className="flex gap-4 mt-2 text-xs text-gray-500">
                   <span>👤 {c._count.users} usuário{c._count.users !== 1 ? "s" : ""}</span>
@@ -36,6 +42,9 @@ export default async function CompaniesPage() {
                   <span>📅 {format(c.createdAt, "dd/MM/yyyy", { locale: ptBR })}</span>
                 </div>
               </div>
+              {c.id !== session!.user.companyId && (
+                <DeleteCompanyButton companyId={c.id} companyName={c.name} />
+              )}
             </div>
           ))}
           {companies.length === 0 && (
