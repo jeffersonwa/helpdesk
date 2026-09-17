@@ -1,6 +1,10 @@
 import { Priority } from "@prisma/client";
 import { prisma } from "./prisma";
 
+// Funções puras do SlaEngine vivem em `@/lib/engines/sla` (livre de Prisma).
+// São reexportadas aqui para preservar os chamadores existentes de `@/lib/sla`.
+export { calcSla, slaStatus } from "./engines/sla";
+
 const defaultHours: Record<Priority, { response: number; resolution: number }> = {
   CRITICAL: { response: 1, resolution: 4 },
   HIGH:     { response: 4, resolution: 8 },
@@ -17,14 +21,4 @@ export async function calcSlaDeadline(companyId: string, priority: Priority): Pr
   const deadline = new Date();
   deadline.setHours(deadline.getHours() + hours);
   return deadline;
-}
-
-export function slaStatus(deadline: Date | null): "ok" | "warning" | "breached" {
-  if (!deadline) return "ok";
-  const now = new Date();
-  const diff = deadline.getTime() - now.getTime();
-  const hours = diff / (1000 * 60 * 60);
-  if (diff < 0) return "breached";
-  if (hours < 2) return "warning";
-  return "ok";
 }

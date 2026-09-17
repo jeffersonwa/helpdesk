@@ -23,63 +23,63 @@ A estratégia prioriza o **núcleo puro e testável** (`PriorityEngine`, `SlaEng
 
 ## Tasks
 
-- [ ] 1. Configurar infraestrutura de testes e utilitários base
-  - [ ] 1.1 Instalar e configurar o runner de testes (Vitest) e `fast-check` com versões fixadas
+- [x] 1. Configurar infraestrutura de testes e utilitários base
+  - [x] 1.1 Instalar e configurar o runner de testes (Vitest) e `fast-check` com versões fixadas
     - Adicionar `vitest`, `@vitest/coverage-v8` e `fast-check` como devDependencies com versões pinadas
     - Criar `vitest.config.ts` (ambiente node, alias `@/` para `src/`) e scripts `test` (`vitest --run`) e `test:watch`
     - Criar `src/lib/__tests__/setup.ts` e um teste smoke que valida a configuração
     - Executar `npm run test` para confirmar que a suíte roda
     - _Requisitos: 12.6, 12.7_
 
-  - [ ] 1.2 Criar tipos de domínio e enums TypeScript espelhando o schema
+  - [x] 1.2 Criar tipos de domínio e enums TypeScript espelhando o schema
     - Criar `src/lib/domain/enums.ts` com `Priority`, `Impact`, `Urgency`, `TicketStatus`, `ChannelType`, `ChannelProvider`, `MessageDirection`, `MessageType`, `ConversationState`, `ApprovalState`, `EscalationTrigger`, `OutboxState`, `ScopeLevel`
     - Criar `src/lib/domain/types.ts` com `InboundMessage`, `OutboundMessage`, `ChannelCapabilities`, `SendResult`, `SessionUser`, `ResourceRef`, `TicketSnapshot`
     - Escrever teste de tipo/valor confirmando os conjuntos de enums exigidos pelo design
     - _Requisitos: 4.6, 5.1, 10.6_
 
-- [ ] 2. Implementar o motor de prioridade (PriorityEngine) — núcleo puro
-  - [ ] 2.1 Implementar `derivePriority(impact, urgency)` pela matriz impacto × urgência
+- [x] 2. Implementar o motor de prioridade (PriorityEngine) — núcleo puro
+  - [x] 2.1 Implementar `derivePriority(impact, urgency)` pela matriz impacto × urgência
     - Criar `src/lib/engines/priority.ts` com a matriz do design (LOW/MEDIUM/HIGH → LOW..CRITICAL)
     - Função pura, sem I/O, determinística
     - _Requisitos: 4.7, 12.6, 12.7_
 
-  - [ ]* 2.2 Escrever teste de propriedade de monotonicidade da prioridade
+  - [x]* 2.2 Escrever teste de propriedade de monotonicidade da prioridade
     - **Property 1: Monotonicidade da prioridade** — aumentar impacto ou urgência nunca reduz a prioridade
     - **Validates: Requisitos 12.7**
     - Usar `fast-check` com arbitrários de `Impact`/`Urgency` e ordem parcial de `Priority`
 
-  - [ ]* 2.3 Escrever teste de propriedade de determinismo da prioridade
+  - [x]* 2.3 Escrever teste de propriedade de determinismo da prioridade
     - **Property 2: Determinismo da prioridade** — mesmo par (impact, urgency) sempre retorna a mesma `Priority`
     - **Validates: Requisitos 12.6**
 
-- [ ] 3. Implementar o motor de SLA (SlaEngine) — núcleo puro
-  - [ ] 3.1 Estender `src/lib/sla.ts` com `calcSla` e `slaStatus` puros
+- [x] 3. Implementar o motor de SLA (SlaEngine) — núcleo puro
+  - [x] 3.1 Estender `src/lib/sla.ts` com `calcSla` e `slaStatus` puros
     - Implementar `calcSla(rule, createdAt)` → `{ responseDeadline, resolutionDeadline }`
     - Implementar `slaStatus(deadline, now)` → `"ok" | "warning" | "breached"` (breached sse `deadline < now`; warning < 2h)
     - Preservar a lógica existente de busca de `SlaRule` por `companyId_priority`
     - _Requisitos: 12.1, 12.2, 12.3_
 
-  - [ ]* 3.2 Escrever teste de propriedade de ordenação de prazos de SLA
+  - [x]* 3.2 Escrever teste de propriedade de ordenação de prazos de SLA
     - **Property 3: Ordenação de prazos de SLA** — `responseHours ≤ resolutionHours` ⇒ `responseDeadline ≤ resolutionDeadline`, ambos `> createdAt`
     - **Validates: Requisitos 12.2**
 
-  - [ ]* 3.3 Escrever teste de propriedade de coerência do status de SLA
+  - [x]* 3.3 Escrever teste de propriedade de coerência do status de SLA
     - **Property 4: Coerência do status de SLA** — `slaStatus` retorna `"breached"` sse `deadline < now`
     - **Validates: Requisitos 12.3**
 
-- [ ] 4. Implementar o motor de escalonamento (EscalationEngine) — núcleo puro
-  - [ ] 4.1 Implementar `selectEscalations(ticket, rules, now)`
+- [x] 4. Implementar o motor de escalonamento (EscalationEngine) — núcleo puro
+  - [x] 4.1 Implementar `selectEscalations(ticket, rules, now)`
     - Criar `src/lib/engines/escalation.ts` conforme pseudocódigo (RESPONSE_BREACH, RESOLUTION_BREACH, INACTIVITY, MANUAL)
     - Incluir predicado de idempotência `jaEscalado(ticket, trigger)` recebido/injetado como dado do snapshot
     - Função pura sobre `TicketSnapshot` e `EscalationRule[]`
     - _Requisitos: 12.4, 12.5_
 
-  - [ ]* 4.2 Escrever testes unitários do EscalationEngine
+  - [x]* 4.2 Escrever testes unitários do EscalationEngine
     - Cobrir cada gatilho, regras inativas, e não-reescalonamento quando já escalado
     - _Requisitos: 12.4, 12.5_
 
-- [ ] 5. Definir contratos de RBAC e implementar o motor de autorização (núcleo puro)
-  - [ ] 5.1 Definir catálogo de permissões, escopos e a interface `Authorization`
+- [x] 5. Definir contratos de RBAC e implementar o motor de autorização (núcleo puro)
+  - [x] 5.1 Definir catálogo de permissões, escopos e a interface `Authorization`
     - Criar `src/lib/rbac/permissions.ts` com o formato `dominio.acao` (ex.: `ticket.assign`, `rbac.manage`, `channel.configure`) e o registro de tipos de recurso reconhecidos
     - Criar `src/lib/rbac/types.ts` com `SessionUser`, `ResourceRef`, `ScopeLevel`, estruturas de `RoleDef`/`Scope` em memória
     - _Requisitos: 2.1, 2.3, 3.3_
@@ -90,19 +90,19 @@ A estratégia prioriza o **núcleo puro e testável** (`PriorityEngine`, `SlaEng
     - Cobrir escopo `TENANT`, escopos restritos com `refId`, e `refId` nulo cobrindo todo o nível
     - _Requisitos: 2.3, 2.4, 2.5, 2.6, 2.7, 2.8, 2.9, 2.10_
 
-  - [ ]* 5.3 Escrever teste de propriedade de isolamento de tenant
+  - [x]* 5.3 Escrever teste de propriedade de isolamento de tenant
     - **Property 6: Isolamento de tenant** — `user.companyId ≠ resource.companyId` ⇒ `can` retorna `false` (exceto operações de plataforma de SUPERADMIN)
     - **Validates: Requisitos 1.5, 2.8**
 
-  - [ ]* 5.4 Escrever teste de propriedade de cobertura de escopo
+  - [x]* 5.4 Escrever teste de propriedade de cobertura de escopo
     - **Property 7: Cobertura de escopo** — escopo `TENANT` cobre qualquer recurso do tenant; escopo mais restrito (ex.: `QUEUE`) nunca concede fora do `refId`
     - **Validates: Requisitos 2.4, 2.5**
 
-  - [ ]* 5.5 Escrever testes unitários de fail-closed do RBAC
+  - [x]* 5.5 Escrever testes unitários de fail-closed do RBAC
     - Ação/recurso desconhecido, usuário sem papéis, permissão ausente → negar
     - _Requisitos: 2.9, 2.10_
 
-- [ ] 6. Checkpoint — motores puros validados
+- [x] 6. Checkpoint — motores puros validados
   - Garantir que todos os testes passem; em caso de dúvidas, perguntar ao usuário.
 
 - [ ] 7. Estender o schema Prisma e criar migrações
