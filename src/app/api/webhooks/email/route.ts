@@ -1,14 +1,45 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { sendEmail } from "@/lib/email";
+import { rateLimit, getClientIp } from "@/lib/rate-limit";
+import crypto from "crypto";
+
+function timingSafeEqual(a: string, b: string): boolean {
+  const bufA = Buffer.from(a);
+  const bufB = Buffer.from(b);
+  // Buffers de tamanhos diferentes quebrariam timingSafeEqual — compara
+  // contra um hash de tamanho fixo primeiro para não vazar o tamanho do secret.
+  if (bufA.length !== bufB.length) {
+    const hashA = crypto.createHash("sha256").update(bufA).digest();
+    const hashB = crypto.createHash("sha256").update(bufB).digest();
+    crypto.timingSafeEqual(hashA, hashB); // consome tempo constante, resultado descartado
+    return false;
+  }
+  return crypto.timingSafeEqual(bufA, bufB);
+}
 
 export async function POST(req: NextRequest) {
-  // Autenticação via token no header ou query param
-  const token = req.headers.get("x-webhook-token")
-    ?? req.nextUrl.searchParams.get("token");
   const secret = process.env.RESEND_WEBHOOK_SECRET;
 
-  if (secret && token !== secret) {
+  // Sem secret configurado, o endpoint fica aberto para qualquer um criar
+  // tickets em nome de usuários cadastrados — recusar em vez de permitir.
+  if (!secret) {
+    console.error("[webhook/email] RESEND_WEBHOOK_SECRET não configurado — recusando requisição");
+    return NextResponse.json({ error: "Webhook não configurado" }, { status: 503 });
+  }
+
+  const ip = getClientIp(req);
+  const ipLimit = rateLimit(`webhook-email:ip:${ip}`, 30, 5 * 60 * 1000);
+  if (!ipLimit.allowed) {
+    return NextResponse.json({ error: "Too many requests" }, { status: 429 });
+  }
+
+  // Autenticação via token no header ou query param
+  const token = req.headers.get("x-webhook-token")
+    ?? req.nextUrl.searchParams.get("token")
+    ?? "";
+
+  if (!timingSafeEqual(token, secret)) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 

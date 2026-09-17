@@ -55,6 +55,11 @@ export async function POST(req: NextRequest) {
 }
 
 export async function GET() {
+  const session = await auth();
+  if (!session || !["ADMIN", "SUPERADMIN"].includes(session.user.role)) {
+    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  }
+
   return NextResponse.json({
     smtp_host: process.env.SMTP_HOST ?? "smtp.resend.com",
     smtp_port: process.env.SMTP_PORT ?? "465",

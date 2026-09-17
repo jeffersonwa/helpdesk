@@ -14,18 +14,31 @@ const schema = z.object({
   mobile: z.string().optional(),
 });
 
-export async function GET() {
+export async function GET(req: NextRequest) {
   const session = await auth();
   if (!session || !["ADMIN", "SUPERADMIN"].includes(session.user.role)) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
 
-  const users = await prisma.user.findMany({
-    where: { companyId: session.user.companyId },
-    select: { id: true, name: true, email: true, role: true, phone: true, mobile: true, createdAt: true },
-  });
+  const { searchParams } = new URL(req.url);
+  const page = Math.max(1, Number(searchParams.get("page") ?? "1") || 1);
+  const pageSize = Math.min(100, Math.max(1, Number(searchParams.get("pageSize") ?? "20") || 20));
 
-  return NextResponse.json(users);
+  const [users, total] = await Promise.all([
+    prisma.user.findMany({
+      where: { companyId: session.user.companyId },
+      select: { id: true, name: true, email: true, role: true, phone: true, mobile: true, createdAt: true },
+      orderBy: { createdAt: "desc" },
+      skip: (page - 1) * pageSize,
+      take: pageSize,
+    }),
+    prisma.user.count({ where: { companyId: session.user.companyId } }),
+  ]);
+
+  return NextResponse.json({
+    data: users,
+    pagination: { page, pageSize, total, totalPages: Math.ceil(total / pageSize) },
+  });
 }
 
 export async function POST(req: NextRequest) {

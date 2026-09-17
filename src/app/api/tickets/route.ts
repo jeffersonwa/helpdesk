@@ -19,6 +19,9 @@ export async function GET(req: NextRequest) {
   const status = searchParams.get("status") as TicketStatus | null;
   const priority = searchParams.get("priority") as Priority | null;
 
+  const page = Math.max(1, Number(searchParams.get("page") ?? "1") || 1);
+  const pageSize = Math.min(100, Math.max(1, Number(searchParams.get("pageSize") ?? "20") || 20));
+
   // SUPERADMIN vê todos os tickets de todas as empresas
   const isSuperAdmin = session.user.role === "SUPERADMIN";
   const where: any = isSuperAdmin ? {} : { companyId: session.user.companyId };
@@ -26,18 +29,26 @@ export async function GET(req: NextRequest) {
   if (status) where.status = status;
   if (priority) where.priority = priority;
 
-  const tickets = await prisma.ticket.findMany({
-    where,
-    include: {
-      createdBy: { select: { id: true, name: true } },
-      assignedTo: { select: { id: true, name: true } },
-      company: { select: { id: true, name: true } },
-      _count: { select: { comments: true } },
-    },
-    orderBy: { createdAt: "desc" },
-  });
+  const [tickets, total] = await Promise.all([
+    prisma.ticket.findMany({
+      where,
+      include: {
+        createdBy: { select: { id: true, name: true } },
+        assignedTo: { select: { id: true, name: true } },
+        company: { select: { id: true, name: true } },
+        _count: { select: { comments: true } },
+      },
+      orderBy: { createdAt: "desc" },
+      skip: (page - 1) * pageSize,
+      take: pageSize,
+    }),
+    prisma.ticket.count({ where }),
+  ]);
 
-  return NextResponse.json(tickets);
+  return NextResponse.json({
+    data: tickets,
+    pagination: { page, pageSize, total, totalPages: Math.ceil(total / pageSize) },
+  });
 }
 
 export async function POST(req: NextRequest) {

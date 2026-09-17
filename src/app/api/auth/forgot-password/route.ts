@@ -1,15 +1,28 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { sendEmail } from "@/lib/email";
+import { rateLimit, getClientIp } from "@/lib/rate-limit";
 import crypto from "crypto";
 import { z } from "zod";
 
 const schema = z.object({ email: z.string().email() });
 
 export async function POST(req: NextRequest) {
+  const ip = getClientIp(req);
+  const ipLimit = rateLimit(`forgot-password:ip:${ip}`, 10, 15 * 60 * 1000);
+  if (!ipLimit.allowed) {
+    return NextResponse.json({ error: "Muitas tentativas. Tente novamente mais tarde." }, { status: 429 });
+  }
+
   const body = await req.json();
   const parsed = schema.safeParse(body);
   if (!parsed.success) return NextResponse.json({ error: "Email inválido" }, { status: 400 });
+
+  const emailLimit = rateLimit(`forgot-password:email:${parsed.data.email.toLowerCase()}`, 3, 15 * 60 * 1000);
+  if (!emailLimit.allowed) {
+    // Ainda responde de forma genérica para não revelar se o email existe
+    return NextResponse.json({ message: "Se o email existir, você receberá as instruções." });
+  }
 
   const user = await prisma.user.findUnique({ where: { email: parsed.data.email } });
 

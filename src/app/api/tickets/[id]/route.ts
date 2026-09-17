@@ -18,8 +18,15 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
   if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   const { id } = await params;
+
+  // SUPERADMIN vê tudo, demais papéis ficam escopados à própria empresa;
+  // CLIENT só pode ver os chamados que ele mesmo abriu.
+  const isSuperAdmin = session.user.role === "SUPERADMIN";
+  const where: Record<string, unknown> = isSuperAdmin ? { id } : { id, companyId: session.user.companyId };
+  if (session.user.role === "CLIENT") where.createdById = session.user.id;
+
   const ticket = await prisma.ticket.findFirst({
-    where: { id, companyId: session.user.companyId },
+    where,
     include: {
       createdBy: { select: { id: true, name: true, email: true } },
       assignedTo: { select: { id: true, name: true } },
@@ -38,10 +45,24 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
   const session = await auth();
   if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
+  // Só agentes e admins podem alterar status/prioridade/responsável de um ticket.
+  // CLIENT usa o endpoint /approve para aprovar ou rejeitar a solução.
+  const isAgentOrAbove = ["AGENT", "ADMIN", "SUPERADMIN"].includes(session.user.role);
+  if (!isAgentOrAbove) {
+    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  }
+
   const { id } = await params;
   const body = await req.json();
   const parsed = updateSchema.safeParse(body);
   if (!parsed.success) return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 });
+
+  const isSuperAdmin = session.user.role === "SUPERADMIN";
+  const scopeWhere = isSuperAdmin ? { id } : { id, companyId: session.user.companyId };
+
+  // Garante que o ticket existe dentro do escopo do usuário antes de alterar
+  const existing = await prisma.ticket.findFirst({ where: scopeWhere, select: { id: true } });
+  if (!existing) return NextResponse.json({ error: "Not found" }, { status: 404 });
 
   const isAdminOrAbove = ["ADMIN", "SUPERADMIN"].includes(session.user.role);
 
@@ -65,7 +86,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
   }
 
   const ticket = await prisma.ticket.update({
-    where: { id, companyId: session.user.companyId },
+    where: { id },
     data,
     include: {
       createdBy: { select: { id: true, name: true, email: true } },

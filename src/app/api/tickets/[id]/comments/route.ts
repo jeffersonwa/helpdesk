@@ -14,9 +14,11 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
   const parsed = schema.safeParse(body);
   if (!parsed.success) return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 });
 
-  const ticket = await prisma.ticket.findFirst({
-    where: { id, companyId: session.user.companyId },
-  });
+  const isSuperAdmin = session.user.role === "SUPERADMIN";
+  const where: Record<string, unknown> = isSuperAdmin ? { id } : { id, companyId: session.user.companyId };
+  if (session.user.role === "CLIENT") where.createdById = session.user.id;
+
+  const ticket = await prisma.ticket.findFirst({ where });
   if (!ticket) return NextResponse.json({ error: "Not found" }, { status: 404 });
 
   const comment = await prisma.comment.create({

@@ -38,10 +38,12 @@ const priorityLabels: Record<Priority, string> = {
   CRITICAL: "Crítica",
 };
 
+const PAGE_SIZE = 25;
+
 export default async function TicketsPage({
   searchParams,
 }: {
-  searchParams: { status?: string; priority?: string };
+  searchParams: { status?: string; priority?: string; page?: string };
 }) {
   const session = await auth();
   const companyId = session!.user.companyId;
@@ -53,16 +55,32 @@ export default async function TicketsPage({
   if (searchParams.status) where.status = searchParams.status;
   if (searchParams.priority) where.priority = searchParams.priority;
 
-  const tickets = await prisma.ticket.findMany({
-    where,
-    include: {
-      createdBy: { select: { name: true } },
-      assignedTo: { select: { name: true } },
-      company: { select: { name: true } },
-      _count: { select: { comments: true } },
-    },
-    orderBy: { createdAt: "desc" },
-  });
+  const page = Math.max(1, Number(searchParams.page ?? "1") || 1);
+
+  const [tickets, total] = await Promise.all([
+    prisma.ticket.findMany({
+      where,
+      include: {
+        createdBy: { select: { name: true } },
+        assignedTo: { select: { name: true } },
+        company: { select: { name: true } },
+        _count: { select: { comments: true } },
+      },
+      orderBy: { createdAt: "desc" },
+      skip: (page - 1) * PAGE_SIZE,
+      take: PAGE_SIZE,
+    }),
+    prisma.ticket.count({ where }),
+  ]);
+
+  const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
+  const buildPageHref = (p: number) => {
+    const qs = new URLSearchParams();
+    if (searchParams.status) qs.set("status", searchParams.status);
+    if (searchParams.priority) qs.set("priority", searchParams.priority);
+    qs.set("page", String(p));
+    return `/tickets?${qs.toString()}`;
+  };
 
   return (
     <div>
@@ -119,6 +137,26 @@ export default async function TicketsPage({
             )}
           </tbody>
         </table>
+
+        {totalPages > 1 && (
+          <div className="flex items-center justify-between px-4 py-3 border-t text-sm text-gray-500">
+            <span>
+              Página {page} de {totalPages} • {total} ticket{total !== 1 ? "s" : ""}
+            </span>
+            <div className="flex gap-2">
+              {page > 1 && (
+                <Link href={buildPageHref(page - 1)} className="px-3 py-1.5 rounded-lg border hover:bg-gray-50">
+                  Anterior
+                </Link>
+              )}
+              {page < totalPages && (
+                <Link href={buildPageHref(page + 1)} className="px-3 py-1.5 rounded-lg border hover:bg-gray-50">
+                  Próxima
+                </Link>
+              )}
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
