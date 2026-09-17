@@ -1,0 +1,360 @@
+{
+  "pbtResults": {},
+  "executionHistory": {
+    "1.1 Instalar e configurar o runner de testes (Vitest) e `fast-check` com versões fixadas": [
+      {
+        "executionId": "df42f03f-1786-43ef-9948-2c0ac5fdbda6",
+        "chatSessionId": "sess_eea4b09f-001e-42ed-98ed-74a035cb7f9b",
+        "timestamp": 1789664055407
+      },
+      {
+        "executionId": "df42f03f-1786-43ef-9948-2c0ac5fdbda6",
+        "chatSessionId": "sess_eea4b09f-001e-42ed-98ed-74a035cb7f9b",
+        "timestamp": 1789664068581
+      }
+    ],
+    "1.2 Criar tipos de domínio e enums TypeScript espelhando o schema": [
+      {
+        "executionId": "df42f03f-1786-43ef-9948-2c0ac5fdbda6",
+        "chatSessionId": "sess_eea4b09f-001e-42ed-98ed-74a035cb7f9b",
+        "timestamp": 1789664055469
+      }
+    ],
+    "2.1 Implementar `derivePriority(impact, urgency)` pela matriz impacto × urgência": [
+      {
+        "executionId": "df42f03f-1786-43ef-9948-2c0ac5fdbda6",
+        "chatSessionId": "sess_eea4b09f-001e-42ed-98ed-74a035cb7f9b",
+        "timestamp": 1789664055531
+      }
+    ],
+    "3.1 Estender `src/lib/sla.ts` com `calcSla` e `slaStatus` puros": [
+      {
+        "executionId": "df42f03f-1786-43ef-9948-2c0ac5fdbda6",
+        "chatSessionId": "sess_eea4b09f-001e-42ed-98ed-74a035cb7f9b",
+        "timestamp": 1789664055569
+      }
+    ],
+    "4.1 Implementar `selectEscalations(ticket, rules, now)`": [
+      {
+        "executionId": "df42f03f-1786-43ef-9948-2c0ac5fdbda6",
+        "chatSessionId": "sess_eea4b09f-001e-42ed-98ed-74a035cb7f9b",
+        "timestamp": 1789664055614
+      }
+    ],
+    "5.1 Definir catálogo de permissões, escopos e a interface `Authorization`": [
+      {
+        "executionId": "df42f03f-1786-43ef-9948-2c0ac5fdbda6",
+        "chatSessionId": "sess_eea4b09f-001e-42ed-98ed-74a035cb7f9b",
+        "timestamp": 1789664055653
+      }
+    ],
+    "5.2 Implementar `Authorization.can` e `Authorization.assert`": [
+      {
+        "executionId": "df42f03f-1786-43ef-9948-2c0ac5fdbda6",
+        "chatSessionId": "sess_eea4b09f-001e-42ed-98ed-74a035cb7f9b",
+        "timestamp": 1789664055700
+      }
+    ],
+    "6. Checkpoint — motores puros validados": [
+      {
+        "executionId": "df42f03f-1786-43ef-9948-2c0ac5fdbda6",
+        "chatSessionId": "sess_eea4b09f-001e-42ed-98ed-74a035cb7f9b",
+        "timestamp": 1789664055740
+      }
+    ],
+    "7.1 Ampliar enums e modelos de organização e catálogo": [
+      {
+        "executionId": "df42f03f-1786-43ef-9948-2c0ac5fdbda6",
+        "chatSessionId": "sess_eea4b09f-001e-42ed-98ed-74a035cb7f9b",
+        "timestamp": 1789664055781
+      }
+    ],
+    "7.2 Ampliar o modelo `Ticket` e adicionar `TicketSequence`, conversas e mensagens": [
+      {
+        "executionId": "df42f03f-1786-43ef-9948-2c0ac5fdbda6",
+        "chatSessionId": "sess_eea4b09f-001e-42ed-98ed-74a035cb7f9b",
+        "timestamp": 1789664055822
+      }
+    ],
+    "7.3 Adicionar modelos de SLA/escalonamento/aprovação, RBAC, KB, auditoria, webhooks e outbox": [
+      {
+        "executionId": "df42f03f-1786-43ef-9948-2c0ac5fdbda6",
+        "chatSessionId": "sess_eea4b09f-001e-42ed-98ed-74a035cb7f9b",
+        "timestamp": 1789664055886
+      }
+    ],
+    "7.4 Gerar a migração e o client, e validar contra o banco": [
+      {
+        "executionId": "df42f03f-1786-43ef-9948-2c0ac5fdbda6",
+        "chatSessionId": "sess_eea4b09f-001e-42ed-98ed-74a035cb7f9b",
+        "timestamp": 1789664055930
+      }
+    ],
+    "8.1 Criar utilitário de contexto de tenant derivado da sessão": [
+      {
+        "executionId": "df42f03f-1786-43ef-9948-2c0ac5fdbda6",
+        "chatSessionId": "sess_eea4b09f-001e-42ed-98ed-74a035cb7f9b",
+        "timestamp": 1789664055972
+      }
+    ],
+    "9.1 Implementar `nextTicketNumber(tx, companyId)` com retry sob concorrência": [
+      {
+        "executionId": "df42f03f-1786-43ef-9948-2c0ac5fdbda6",
+        "chatSessionId": "sess_eea4b09f-001e-42ed-98ed-74a035cb7f9b",
+        "timestamp": 1789664056016
+      }
+    ],
+    "10.1 Implementar criação e validação Zod de tickets": [
+      {
+        "executionId": "df42f03f-1786-43ef-9948-2c0ac5fdbda6",
+        "chatSessionId": "sess_eea4b09f-001e-42ed-98ed-74a035cb7f9b",
+        "timestamp": 1789664056053
+      }
+    ],
+    "10.2 Implementar transições de ciclo de vida e integração com SLA": [
+      {
+        "executionId": "df42f03f-1786-43ef-9948-2c0ac5fdbda6",
+        "chatSessionId": "sess_eea4b09f-001e-42ed-98ed-74a035cb7f9b",
+        "timestamp": 1789664056097
+      }
+    ],
+    "11.1 Implementar serviços CRUD de org/catálogo com validação hierárquica": [
+      {
+        "executionId": "df42f03f-1786-43ef-9948-2c0ac5fdbda6",
+        "chatSessionId": "sess_eea4b09f-001e-42ed-98ed-74a035cb7f9b",
+        "timestamp": 1789664056135
+      }
+    ],
+    "12. Checkpoint — domínio persistente validado": [
+      {
+        "executionId": "df42f03f-1786-43ef-9948-2c0ac5fdbda6",
+        "chatSessionId": "sess_eea4b09f-001e-42ed-98ed-74a035cb7f9b",
+        "timestamp": 1789664056199
+      }
+    ],
+    "13.1 Implementar a interface `ChannelAdapter` e o registro de providers": [
+      {
+        "executionId": "df42f03f-1786-43ef-9948-2c0ac5fdbda6",
+        "chatSessionId": "sess_eea4b09f-001e-42ed-98ed-74a035cb7f9b",
+        "timestamp": 1789664056252
+      }
+    ],
+    "14.1 Implementar verificação de webhook (handshake GET e HMAC POST)": [
+      {
+        "executionId": "df42f03f-1786-43ef-9948-2c0ac5fdbda6",
+        "chatSessionId": "sess_eea4b09f-001e-42ed-98ed-74a035cb7f9b",
+        "timestamp": 1789664056292
+      }
+    ],
+    "14.2 Implementar normalização (`parseInbound`) e envio (`send`) com janela de 24h, templates e mídia": [
+      {
+        "executionId": "df42f03f-1786-43ef-9948-2c0ac5fdbda6",
+        "chatSessionId": "sess_eea4b09f-001e-42ed-98ed-74a035cb7f9b",
+        "timestamp": 1789664056332
+      }
+    ],
+    "15.1 Implementar o MOCK com a mesma interface e bloqueio em produção": [
+      {
+        "executionId": "df42f03f-1786-43ef-9948-2c0ac5fdbda6",
+        "chatSessionId": "sess_eea4b09f-001e-42ed-98ed-74a035cb7f9b",
+        "timestamp": 1789664056382
+      }
+    ],
+    "16.1 Implementar `route(msg)` com resolução de tenant, idempotência e criação/atualização de conversa e ticket": [
+      {
+        "executionId": "df42f03f-1786-43ef-9948-2c0ac5fdbda6",
+        "chatSessionId": "sess_eea4b09f-001e-42ed-98ed-74a035cb7f9b",
+        "timestamp": 1789664056421
+      }
+    ],
+    "17.1 Implementar upsert de conversa e persistência de mensagem": [
+      {
+        "executionId": "df42f03f-1786-43ef-9948-2c0ac5fdbda6",
+        "chatSessionId": "sess_eea4b09f-001e-42ed-98ed-74a035cb7f9b",
+        "timestamp": 1789664056466
+      }
+    ],
+    "18.1 Implementar ingestão por inbound webhook e IMAP polling, e envio com thread": [
+      {
+        "executionId": "df42f03f-1786-43ef-9948-2c0ac5fdbda6",
+        "chatSessionId": "sess_eea4b09f-001e-42ed-98ed-74a035cb7f9b",
+        "timestamp": 1789664056506
+      }
+    ],
+    "19.1 Implementar rate limiting, CAPTCHA, antispam e escopo de tenant por token": [
+      {
+        "executionId": "df42f03f-1786-43ef-9948-2c0ac5fdbda6",
+        "chatSessionId": "sess_eea4b09f-001e-42ed-98ed-74a035cb7f9b",
+        "timestamp": 1789664056570
+      }
+    ],
+    "20.1 Implementar criação/atualização de ticket via API autenticada": [
+      {
+        "executionId": "df42f03f-1786-43ef-9948-2c0ac5fdbda6",
+        "chatSessionId": "sess_eea4b09f-001e-42ed-98ed-74a035cb7f9b",
+        "timestamp": 1789664056622
+      }
+    ],
+    "21.1 Implementar route handlers Next.js para os canais": [
+      {
+        "executionId": "df42f03f-1786-43ef-9948-2c0ac5fdbda6",
+        "chatSessionId": "sess_eea4b09f-001e-42ed-98ed-74a035cb7f9b",
+        "timestamp": 1789664056670
+      }
+    ],
+    "22. Checkpoint — ingestão omnichannel ponta a ponta validada": [
+      {
+        "executionId": "df42f03f-1786-43ef-9948-2c0ac5fdbda6",
+        "chatSessionId": "sess_eea4b09f-001e-42ed-98ed-74a035cb7f9b",
+        "timestamp": 1789664056719
+      }
+    ],
+    "23.1 Implementar o dispatcher do outbox e o worker de processamento": [
+      {
+        "executionId": "df42f03f-1786-43ef-9948-2c0ac5fdbda6",
+        "chatSessionId": "sess_eea4b09f-001e-42ed-98ed-74a035cb7f9b",
+        "timestamp": 1789664056766
+      }
+    ],
+    "23.2 Implementar o worker de SLA/escalonamento": [
+      {
+        "executionId": "df42f03f-1786-43ef-9948-2c0ac5fdbda6",
+        "chatSessionId": "sess_eea4b09f-001e-42ed-98ed-74a035cb7f9b",
+        "timestamp": 1789664056807
+      }
+    ],
+    "24.1 Implementar criação e decisão de aprovações": [
+      {
+        "executionId": "df42f03f-1786-43ef-9948-2c0ac5fdbda6",
+        "chatSessionId": "sess_eea4b09f-001e-42ed-98ed-74a035cb7f9b",
+        "timestamp": 1789664056855
+      }
+    ],
+    "25.1 Implementar trilha imutável de auditoria": [
+      {
+        "executionId": "df42f03f-1786-43ef-9948-2c0ac5fdbda6",
+        "chatSessionId": "sess_eea4b09f-001e-42ed-98ed-74a035cb7f9b",
+        "timestamp": 1789664056904
+      }
+    ],
+    "25.2 Implementar retenção, exportação e eliminação de dados pessoais (LGPD)": [
+      {
+        "executionId": "df42f03f-1786-43ef-9948-2c0ac5fdbda6",
+        "chatSessionId": "sess_eea4b09f-001e-42ed-98ed-74a035cb7f9b",
+        "timestamp": 1789664056947
+      }
+    ],
+    "26.1 Implementar CRUD e busca de artigos filtrados por tenant e publicação": [
+      {
+        "executionId": "df42f03f-1786-43ef-9948-2c0ac5fdbda6",
+        "chatSessionId": "sess_eea4b09f-001e-42ed-98ed-74a035cb7f9b",
+        "timestamp": 1789664056988
+      }
+    ],
+    "27.1 Implementar o serviço de métricas filtrado por tenant e escopo": [
+      {
+        "executionId": "df42f03f-1786-43ef-9948-2c0ac5fdbda6",
+        "chatSessionId": "sess_eea4b09f-001e-42ed-98ed-74a035cb7f9b",
+        "timestamp": 1789664057038
+      }
+    ],
+    "28.1 Implementar o motor de automação por conta de serviço": [
+      {
+        "executionId": "df42f03f-1786-43ef-9948-2c0ac5fdbda6",
+        "chatSessionId": "sess_eea4b09f-001e-42ed-98ed-74a035cb7f9b",
+        "timestamp": 1789664057107
+      }
+    ],
+    "29.1 Implementar disparo assinado por HMAC via outbox": [
+      {
+        "executionId": "df42f03f-1786-43ef-9948-2c0ac5fdbda6",
+        "chatSessionId": "sess_eea4b09f-001e-42ed-98ed-74a035cb7f9b",
+        "timestamp": 1789664057149
+      }
+    ],
+    "30.1 Implementar logger estruturado com mascaramento de segredos/PII": [
+      {
+        "executionId": "df42f03f-1786-43ef-9948-2c0ac5fdbda6",
+        "chatSessionId": "sess_eea4b09f-001e-42ed-98ed-74a035cb7f9b",
+        "timestamp": 1789664057186
+      }
+    ],
+    "30.2 Implementar health check e exportação de métricas": [
+      {
+        "executionId": "df42f03f-1786-43ef-9948-2c0ac5fdbda6",
+        "chatSessionId": "sess_eea4b09f-001e-42ed-98ed-74a035cb7f9b",
+        "timestamp": 1789664057232
+      }
+    ],
+    "31. Checkpoint — serviços de backend e efeitos externos validados": [
+      {
+        "executionId": "df42f03f-1786-43ef-9948-2c0ac5fdbda6",
+        "chatSessionId": "sess_eea4b09f-001e-42ed-98ed-74a035cb7f9b",
+        "timestamp": 1789664057285
+      }
+    ],
+    "32.1 Implementar serviço de papéis, permissões, escopos e atribuições": [
+      {
+        "executionId": "df42f03f-1786-43ef-9948-2c0ac5fdbda6",
+        "chatSessionId": "sess_eea4b09f-001e-42ed-98ed-74a035cb7f9b",
+        "timestamp": 1789664057326
+      }
+    ],
+    "33.1 Adicionar rotas de conversas, filas, catálogo e admin (RBAC/canais)": [
+      {
+        "executionId": "df42f03f-1786-43ef-9948-2c0ac5fdbda6",
+        "chatSessionId": "sess_eea4b09f-001e-42ed-98ed-74a035cb7f9b",
+        "timestamp": 1789664057374
+      }
+    ],
+    "34.1 Criar o grupo de rotas `(portal)` com base de conhecimento e chamados do solicitante": [
+      {
+        "executionId": "df42f03f-1786-43ef-9948-2c0ac5fdbda6",
+        "chatSessionId": "sess_eea4b09f-001e-42ed-98ed-74a035cb7f9b",
+        "timestamp": 1789664057424
+      }
+    ],
+    "35.1 Criar as páginas de dashboards/KPIs consumindo o serviço de relatórios": [
+      {
+        "executionId": "df42f03f-1786-43ef-9948-2c0ac5fdbda6",
+        "chatSessionId": "sess_eea4b09f-001e-42ed-98ed-74a035cb7f9b",
+        "timestamp": 1789664057471
+      }
+    ],
+    "36.1 Criar Dockerfile, docker-compose e entrypoint com migrações e validação de segredos": [
+      {
+        "executionId": "df42f03f-1786-43ef-9948-2c0ac5fdbda6",
+        "chatSessionId": "sess_eea4b09f-001e-42ed-98ed-74a035cb7f9b",
+        "timestamp": 1789664057520
+      }
+    ],
+    "36.3 Adicionar manifestos de prontidão para Kubernetes": [
+      {
+        "executionId": "df42f03f-1786-43ef-9948-2c0ac5fdbda6",
+        "chatSessionId": "sess_eea4b09f-001e-42ed-98ed-74a035cb7f9b",
+        "timestamp": 1789664057570
+      }
+    ],
+    "37.1 Escrever `docs/whatsapp-setup.md`": [
+      {
+        "executionId": "df42f03f-1786-43ef-9948-2c0ac5fdbda6",
+        "chatSessionId": "sess_eea4b09f-001e-42ed-98ed-74a035cb7f9b",
+        "timestamp": 1789664057620
+      }
+    ],
+    "37.2 Escrever ADRs em `docs/adr/`": [
+      {
+        "executionId": "df42f03f-1786-43ef-9948-2c0ac5fdbda6",
+        "chatSessionId": "sess_eea4b09f-001e-42ed-98ed-74a035cb7f9b",
+        "timestamp": 1789664057671
+      }
+    ],
+    "38. Checkpoint final — suíte completa e integração ponta a ponta": [
+      {
+        "executionId": "df42f03f-1786-43ef-9948-2c0ac5fdbda6",
+        "chatSessionId": "sess_eea4b09f-001e-42ed-98ed-74a035cb7f9b",
+        "timestamp": 1789664057720
+      }
+    ]
+  }
+}
