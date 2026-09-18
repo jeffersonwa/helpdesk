@@ -105,23 +105,23 @@ A estratégia prioriza o **núcleo puro e testável** (`PriorityEngine`, `SlaEng
 - [x] 6. Checkpoint — motores puros validados
   - Garantir que todos os testes passem; em caso de dúvidas, perguntar ao usuário.
 
-- [ ] 7. Estender o schema Prisma e criar migrações
-  - [ ] 7.1 Ampliar enums e modelos de organização e catálogo
+- [x] 7. Estender o schema Prisma e criar migrações
+  - [x] 7.1 Ampliar enums e modelos de organização e catálogo
     - Editar `prisma/schema.prisma`: ampliar `Role`, adicionar enums do design; adicionar `OrgUnit`, `Department`, `Team`, `TeamMember`, `Queue`, `CatalogService`, `Category`, `Subcategory`, `CategoryItem`
     - Toda entidade de negócio inclui `companyId` e índice por `companyId`
     - _Requisitos: 1.7, 11.1, 11.3, 11.5, 11.6, 11.7_
 
-  - [ ] 7.2 Ampliar o modelo `Ticket` e adicionar `TicketSequence`, conversas e mensagens
+  - [x] 7.2 Ampliar o modelo `Ticket` e adicionar `TicketSequence`, conversas e mensagens
     - Adicionar campos ampliados de `Ticket` (impact/urgency/priority/origin/relacionamentos/prazos), `@@unique([companyId, number])`, `TicketSequence`
     - Adicionar `ChannelAccount`, `Conversation`, `Message` com `@@unique([companyId, externalId])`
     - _Requisitos: 4.2, 4.3, 4.5, 5.1, 6.12, 10.1, 10.6, 10.7_
 
-  - [ ] 7.3 Adicionar modelos de SLA/escalonamento/aprovação, RBAC, KB, auditoria, webhooks e outbox
+  - [x] 7.3 Adicionar modelos de SLA/escalonamento/aprovação, RBAC, KB, auditoria, webhooks e outbox
     - Adicionar `EscalationRule`, `EscalationLog`, `Approval`; `RoleDef`, `Permission`, `RoleAssignment`, `Scope`; `KbArticle`, `AuditLog`, `Webhook`, `OutboxEvent`
     - Preservar `SlaRule`, `PasswordResetToken` existentes; `secretRef` como referência (nunca segredo)
     - _Requisitos: 3.1, 12.8, 13.1, 14.1, 17.1, 17.3_
 
-  - [ ] 7.4 Gerar a migração e o client, e validar contra o banco
+  - [x] 7.4 Gerar a migração e o client, e validar contra o banco
     - Executar `npx prisma migrate dev --name omnichannel_core` e `npx prisma generate`
     - Escrever teste de integração que abre `PrismaClient`, cria uma `Company` e persiste uma entidade de cada grupo, confirmando as constraints `@@unique`
     - _Requisitos: 1.7, 4.5, 6.12_

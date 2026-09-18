@@ -7,6 +7,127 @@ datasource db {
   provider = "postgresql"
 }
 
+// ===========================================================================
+// Enums (new and extended)
+// ===========================================================================
+
+enum Role {
+  SUPERADMIN
+  ADMIN
+  SERVICE_MANAGER
+  SUPERVISOR
+  AGENT
+  SPECIALIST
+  APPROVER
+  AUDITOR
+  READONLY
+  INTEGRATION
+  SERVICE_ACCOUNT
+  CLIENT
+}
+
+enum TicketStatus {
+  OPEN
+  IN_PROGRESS
+  WAITING
+  PENDING_APPROVAL
+  RESOLVED
+  CLOSED
+  CANCELLED
+}
+
+enum Priority {
+  LOW
+  MEDIUM
+  HIGH
+  CRITICAL
+}
+
+enum Impact {
+  LOW
+  MEDIUM
+  HIGH
+}
+
+enum Urgency {
+  LOW
+  MEDIUM
+  HIGH
+}
+
+enum ChannelType {
+  WEB
+  WHATSAPP
+  EMAIL
+  PUBLIC_FORM
+  API
+}
+
+enum ChannelProvider {
+  WHATSAPP_CLOUD
+  WHATSAPP_MOCK
+  EMAIL_RESEND
+  EMAIL_IMAP
+  INTERNAL
+}
+
+enum MessageDirection {
+  INBOUND
+  OUTBOUND
+}
+
+enum MessageType {
+  TEXT
+  IMAGE
+  DOCUMENT
+  AUDIO
+  VIDEO
+  TEMPLATE
+  SYSTEM
+}
+
+enum ConversationState {
+  OPEN
+  PENDING
+  RESOLVED
+  EXPIRED
+}
+
+enum ApprovalState {
+  PENDING
+  APPROVED
+  REJECTED
+  CANCELLED
+}
+
+enum EscalationTrigger {
+  RESPONSE_BREACH
+  RESOLUTION_BREACH
+  INACTIVITY
+  MANUAL
+}
+
+enum OutboxState {
+  PENDING
+  PROCESSING
+  SENT
+  FAILED
+}
+
+enum ScopeLevel {
+  TENANT
+  UNIT
+  DEPARTMENT
+  TEAM
+  QUEUE
+  CATEGORY
+  TICKET
+}
+
+// ===========================================================================
+// Tenant root + users (existing, extended with back-relations)
+// ===========================================================================
+
 model Company {
   id        String   @id @default(cuid())
   name      String
@@ -18,6 +139,20 @@ model Company {
   users    User[]
   tickets  Ticket[]
   slaRules SlaRule[]
+
+  // Omnichannel back-relations
+  orgUnits        OrgUnit[]
+  departments     Department[]
+  teams           Team[]
+  queues          Queue[]
+  catalogServices CatalogService[]
+  categories      Category[]
+  channelAccounts ChannelAccount[]
+  conversations   Conversation[]
+  roleDefs        RoleDef[]
+  kbArticles      KbArticle[]
+  webhooks        Webhook[]
+  auditLogs       AuditLog[]
 }
 
 model User {
@@ -32,32 +167,185 @@ model User {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  company         Company   @relation(fields: [companyId], references: [id])
-  ticketsCreated  Ticket[]  @relation("CreatedBy")
-  ticketsAssigned Ticket[]  @relation("AssignedTo")
+  company         Company              @relation(fields: [companyId], references: [id])
+  ticketsCreated  Ticket[]             @relation("CreatedBy")
+  ticketsAssigned Ticket[]             @relation("AssignedTo")
   comments        Comment[]
   resetTokens     PasswordResetToken[]
+
+  // Omnichannel back-relations
+  teamMemberships TeamMember[]
+  roleAssignments RoleAssignment[]
 }
 
-model Ticket {
-  id           String       @id @default(cuid())
-  title        String
-  description  String
-  status       TicketStatus @default(OPEN)
-  priority     Priority     @default(MEDIUM)
-  companyId    String
-  createdById  String
-  assignedToId String?
-  slaDeadline          DateTime?
-  resolvedAt           DateTime?
-  pendingApprovalSince DateTime?
-  createdAt    DateTime     @default(now())
-  updatedAt    DateTime     @updatedAt
+// ===========================================================================
+// Organization and catalog
+// ===========================================================================
 
-  company    Company   @relation(fields: [companyId], references: [id])
-  createdBy  User      @relation("CreatedBy", fields: [createdById], references: [id])
-  assignedTo User?     @relation("AssignedTo", fields: [assignedToId], references: [id])
-  comments   Comment[]
+model OrgUnit {
+  id        String    @id @default(cuid())
+  companyId String
+  name      String
+  parentId  String?
+  company   Company   @relation(fields: [companyId], references: [id])
+  parent    OrgUnit?  @relation("UnitTree", fields: [parentId], references: [id])
+  children  OrgUnit[] @relation("UnitTree")
+
+  @@index([companyId])
+}
+
+model Department {
+  id        String  @id @default(cuid())
+  companyId String
+  unitId    String?
+  name      String
+  company   Company @relation(fields: [companyId], references: [id])
+  teams     Team[]
+
+  @@index([companyId])
+}
+
+model Team {
+  id           String       @id @default(cuid())
+  companyId    String
+  departmentId String?
+  name         String
+  members      TeamMember[]
+  company      Company      @relation(fields: [companyId], references: [id])
+  department   Department?  @relation(fields: [departmentId], references: [id])
+
+  @@index([companyId])
+}
+
+model TeamMember {
+  id     String @id @default(cuid())
+  teamId String
+  userId String
+  team   Team   @relation(fields: [teamId], references: [id])
+  user   User   @relation(fields: [userId], references: [id])
+
+  @@unique([teamId, userId])
+}
+
+model Queue {
+  id        String   @id @default(cuid())
+  companyId String
+  name      String
+  teamId    String?
+  isDefault Boolean  @default(false)
+  company   Company  @relation(fields: [companyId], references: [id])
+  tickets   Ticket[]
+
+  @@index([companyId])
+}
+
+model CatalogService {
+  id         String     @id @default(cuid())
+  companyId  String
+  name       String
+  active     Boolean    @default(true)
+  company    Company    @relation(fields: [companyId], references: [id])
+  categories Category[]
+
+  @@index([companyId])
+}
+
+model Category {
+  id            String          @id @default(cuid())
+  companyId     String
+  serviceId     String?
+  name          String
+  company       Company         @relation(fields: [companyId], references: [id])
+  service       CatalogService? @relation(fields: [serviceId], references: [id])
+  subcategories Subcategory[]
+
+  @@index([companyId])
+}
+
+model Subcategory {
+  id         String         @id @default(cuid())
+  categoryId String
+  name       String
+  category   Category       @relation(fields: [categoryId], references: [id])
+  items      CategoryItem[]
+}
+
+model CategoryItem {
+  id            String      @id @default(cuid())
+  subcategoryId String
+  name          String
+  subcategory   Subcategory @relation(fields: [subcategoryId], references: [id])
+}
+
+// ===========================================================================
+// Tickets (existing, extended) + sequence + events
+// ===========================================================================
+
+model Ticket {
+  id          String       @id @default(cuid())
+  number      Int
+  companyId   String
+  title       String
+  description String
+  status      TicketStatus @default(OPEN)
+  impact      Impact       @default(MEDIUM)
+  urgency     Urgency      @default(MEDIUM)
+  priority    Priority     @default(MEDIUM)
+  origin      ChannelType  @default(WEB)
+
+  createdById    String
+  assignedToId   String?
+  unitId         String?
+  departmentId   String?
+  serviceId      String?
+  categoryId     String?
+  subcategoryId  String?
+  categoryItemId String?
+  queueId        String?
+  teamId         String?
+  conversationId String?
+
+  // Existing column preserved (superseded by the two new deadlines but kept
+  // to avoid a destructive drop).
+  slaDeadline           DateTime?
+  slaResponseDeadline   DateTime?
+  slaResolutionDeadline DateTime?
+  firstResponseAt       DateTime?
+  resolvedAt            DateTime?
+  pendingApprovalSince  DateTime?
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+
+  company      Company         @relation(fields: [companyId], references: [id])
+  createdBy    User            @relation("CreatedBy", fields: [createdById], references: [id])
+  assignedTo   User?           @relation("AssignedTo", fields: [assignedToId], references: [id])
+  queue        Queue?          @relation(fields: [queueId], references: [id])
+  conversation Conversation?   @relation(fields: [conversationId], references: [id])
+  comments     Comment[]
+  events       TicketEvent[]
+  approvals    Approval[]
+  escalations  EscalationLog[]
+
+  @@unique([companyId, number])
+  @@index([companyId, status])
+  @@index([companyId, assignedToId])
+}
+
+model TicketSequence {
+  companyId String @id
+  next      Int    @default(1)
+}
+
+model TicketEvent {
+  id        String   @id @default(cuid())
+  companyId String
+  ticketId  String
+  type      String
+  data      Json?
+  createdAt DateTime @default(now())
+  ticket    Ticket   @relation(fields: [ticketId], references: [id])
+
+  @@index([companyId, ticketId])
 }
 
 model Comment {
@@ -71,48 +359,213 @@ model Comment {
   author User   @relation(fields: [authorId], references: [id])
 }
 
+// ===========================================================================
+// Conversations, messages and channel accounts
+// ===========================================================================
+
+model ChannelAccount {
+  id            String          @id @default(cuid())
+  companyId     String
+  type          ChannelType
+  provider      ChannelProvider
+  label         String
+  externalId    String?
+  secretRef     String
+  active        Boolean         @default(true)
+  company       Company         @relation(fields: [companyId], references: [id])
+  conversations Conversation[]
+
+  @@index([companyId, type])
+}
+
+model Conversation {
+  id                String            @id @default(cuid())
+  companyId         String
+  channelAccountId  String
+  contactExternalId String
+  contactName       String?
+  state             ConversationState @default(OPEN)
+  windowExpiresAt   DateTime?
+  createdAt         DateTime          @default(now())
+  updatedAt         DateTime          @updatedAt
+  company           Company           @relation(fields: [companyId], references: [id])
+  channelAccount    ChannelAccount    @relation(fields: [channelAccountId], references: [id])
+  messages          Message[]
+  tickets           Ticket[]
+
+  @@index([companyId, channelAccountId, contactExternalId])
+}
+
+model Message {
+  id             String           @id @default(cuid())
+  companyId      String
+  conversationId String
+  direction      MessageDirection
+  type           MessageType
+  body           String?
+  mediaUrl       String?
+  externalId     String?
+  authorUserId   String?
+  createdAt      DateTime         @default(now())
+  conversation   Conversation     @relation(fields: [conversationId], references: [id])
+
+  @@unique([companyId, externalId])
+  @@index([conversationId, createdAt])
+}
+
+// ===========================================================================
+// SLA, escalation and approvals
+// ===========================================================================
+
 model SlaRule {
   id              String   @id @default(cuid())
   companyId       String
   priority        Priority
   responseHours   Int
   resolutionHours Int
-
-  company Company @relation(fields: [companyId], references: [id])
+  company         Company  @relation(fields: [companyId], references: [id])
 
   @@unique([companyId, priority])
 }
 
-model PasswordResetToken {
+model EscalationRule {
+  id        String            @id @default(cuid())
+  companyId String
+  trigger   EscalationTrigger
+  afterMin  Int
+  toUserId  String?
+  toTeamId  String?
+  active    Boolean           @default(true)
+
+  @@index([companyId])
+}
+
+model EscalationLog {
+  id        String            @id @default(cuid())
+  companyId String
+  ticketId  String
+  trigger   EscalationTrigger
+  createdAt DateTime          @default(now())
+  ticket    Ticket            @relation(fields: [ticketId], references: [id])
+}
+
+model Approval {
+  id         String        @id @default(cuid())
+  companyId  String
+  ticketId   String
+  approverId String
+  state      ApprovalState @default(PENDING)
+  reason     String?
+  decidedAt  DateTime?
+  createdAt  DateTime      @default(now())
+  ticket     Ticket        @relation(fields: [ticketId], references: [id])
+
+  @@index([companyId, ticketId])
+}
+
+// ===========================================================================
+// RBAC, knowledge base, audit and webhooks
+// ===========================================================================
+
+model RoleDef {
+  id          String           @id @default(cuid())
+  companyId   String?
+  name        String
+  permissions Permission[]
+  assignments RoleAssignment[]
+  company     Company?         @relation(fields: [companyId], references: [id])
+}
+
+model Permission {
+  id        String  @id @default(cuid())
+  roleDefId String
+  action    String
+  roleDef   RoleDef @relation(fields: [roleDefId], references: [id])
+
+  @@index([roleDefId])
+}
+
+model RoleAssignment {
+  id        String  @id @default(cuid())
+  companyId String
+  userId    String
+  roleDefId String
+  scopes    Scope[]
+  user      User    @relation(fields: [userId], references: [id])
+  roleDef   RoleDef @relation(fields: [roleDefId], references: [id])
+
+  @@index([companyId, userId])
+}
+
+model Scope {
+  id               String         @id @default(cuid())
+  roleAssignmentId String
+  level            ScopeLevel
+  refId            String?
+  assignment       RoleAssignment @relation(fields: [roleAssignmentId], references: [id])
+}
+
+model KbArticle {
+  id         String   @id @default(cuid())
+  companyId  String
+  title      String
+  body       String
+  published  Boolean  @default(false)
+  categoryId String?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  company    Company  @relation(fields: [companyId], references: [id])
+
+  @@index([companyId, published])
+}
+
+model AuditLog {
+  id         String   @id @default(cuid())
+  companyId  String
+  actorId    String?
+  action     String
+  entityType String
+  entityId   String
+  before     Json?
+  after      Json?
+  ip         String?
+  createdAt  DateTime @default(now())
+  company    Company  @relation(fields: [companyId], references: [id])
+
+  @@index([companyId, entityType, entityId])
+  @@index([companyId, createdAt])
+}
+
+model Webhook {
   id        String   @id @default(cuid())
-  token     String   @unique
+  companyId String
+  url       String
+  events    String[]
+  secretRef String
+  active    Boolean  @default(true)
+  company   Company  @relation(fields: [companyId], references: [id])
+}
+
+model OutboxEvent {
+  id        String      @id @default(cuid())
+  companyId String
+  type      String
+  payload   Json
+  state     OutboxState @default(PENDING)
+  attempts  Int         @default(0)
+  nextRunAt DateTime    @default(now())
+  createdAt DateTime    @default(now())
+
+  @@index([state, nextRunAt])
+}
+
+model PasswordResetToken {
+  id        String    @id @default(cuid())
+  token     String    @unique
   userId    String
   expiresAt DateTime
   usedAt    DateTime?
-  createdAt DateTime @default(now())
+  createdAt DateTime  @default(now())
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
-}
-
-enum Role {
-  SUPERADMIN
-  ADMIN
-  AGENT
-  CLIENT
-}
-
-enum TicketStatus {
-  OPEN
-  IN_PROGRESS
-  WAITING
-  PENDING_APPROVAL
-  RESOLVED
-  CLOSED
-}
-
-enum Priority {
-  LOW
-  MEDIUM
-  HIGH
-  CRITICAL
 }
