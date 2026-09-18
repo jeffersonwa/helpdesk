@@ -126,53 +126,53 @@ A estratégia prioriza o **núcleo puro e testável** (`PriorityEngine`, `SlaEng
     - Escrever teste de integração que abre `PrismaClient`, cria uma `Company` e persiste uma entidade de cada grupo, confirmando as constraints `@@unique`
     - _Requisitos: 1.7, 4.5, 6.12_
 
-- [ ] 8. Implementar helpers de isolamento de tenant
-  - [ ] 8.1 Criar utilitário de contexto de tenant derivado da sessão
+- [x] 8. Implementar helpers de isolamento de tenant
+  - [x] 8.1 Criar utilitário de contexto de tenant derivado da sessão
     - Criar `src/lib/tenant/context.ts` com `getTenantContext()` que resolve `companyId` da sessão NextAuth (nunca do corpo) e lança `AuthorizationError` se ausente
     - Criar `tenantWhere(companyId)` e `assertSameTenant(resource, companyId)` para uso em consultas/serviços
     - _Requisitos: 1.1, 1.2, 1.3, 1.4, 1.7_
 
-  - [ ]* 8.2 Escrever testes unitários dos helpers de tenant
+  - [x]* 8.2 Escrever testes unitários dos helpers de tenant
     - `companyId` do corpo é ignorado; sessão sem `companyId` rejeita; consultas filtram por `companyId`
     - _Requisitos: 1.2, 1.3, 1.4_
 
-- [ ] 9. Implementar numeração sequencial de tickets (transacional)
-  - [ ] 9.1 Implementar `nextTicketNumber(tx, companyId)` com retry sob concorrência
+- [x] 9. Implementar numeração sequencial de tickets (transacional)
+  - [x] 9.1 Implementar `nextTicketNumber(tx, companyId)` com retry sob concorrência
     - Criar `src/lib/tickets/sequence.ts` usando `TicketSequence` dentro de transação; retry em colisão de `@@unique([companyId, number])` (até 5 tentativas)
     - Ao esgotar tentativas, lançar erro de conflito de numeração
     - _Requisitos: 4.5, 4.8, 4.9_
 
-  - [ ]* 9.2 Escrever teste de propriedade de unicidade do número de ticket
+  - [x]* 9.2 Escrever teste de propriedade de unicidade do número de ticket
     - **Property 8: Unicidade do número de ticket** — criações concorrentes no mesmo tenant produzem números distintos e contíguos
     - **Validates: Requisitos 4.5**
     - Simular concorrência com múltiplas transações contra o banco de teste
 
-- [ ] 10. Implementar o serviço de tickets (TicketService)
-  - [ ] 10.1 Implementar criação e validação Zod de tickets
+- [x] 10. Implementar o serviço de tickets (TicketService)
+  - [x] 10.1 Implementar criação e validação Zod de tickets
     - Criar `src/lib/tickets/service.ts` com `createTicket` (valida título 1–200, descrição 1–5.000, solicitante e empresa obrigatórios; registra `origin`; status inicial OPEN)
     - Derivar `priority` via `derivePriority`; obter número via `nextTicketNumber`; persistir com `companyId` do contexto
     - _Requisitos: 4.1, 4.2, 4.3, 4.4, 4.7_
 
-  - [ ] 10.2 Implementar transições de ciclo de vida e integração com SLA
+  - [x] 10.2 Implementar transições de ciclo de vida e integração com SLA
     - Implementar mudança de status restrita aos valores válidos; ao criar, chamar `calcSla` a partir da `SlaRule` da prioridade; se não houver `SlaRule`, rejeitar cálculo e sinalizar erro (ticket sem prazos)
     - Aplicar `Authorization.assert` antes de qualquer efeito
     - _Requisitos: 4.6, 12.1, 12.10, 2.1, 2.7_
 
-  - [ ]* 10.3 Escrever testes unitários/integração do TicketService
+  - [x]* 10.3 Escrever testes unitários/integração do TicketService
     - Validação de campos obrigatórios; status inicial; prioridade derivada; ausência de `SlaRule`
     - _Requisitos: 4.3, 4.4, 4.6, 12.10_
 
-- [ ] 11. Implementar estrutura organizacional e catálogo de serviços
-  - [ ] 11.1 Implementar serviços CRUD de org/catálogo com validação hierárquica
+- [x] 11. Implementar estrutura organizacional e catálogo de serviços
+  - [x] 11.1 Implementar serviços CRUD de org/catálogo com validação hierárquica
     - Criar `src/lib/org/service.ts`: unidades, departamentos, times, filas, categorias, subcategorias, itens, serviços; nome 1–120, unicidade por tipo+tenant
     - Validar árvore de `OrgUnit` (máx. 10 níveis, sem ciclo, `parentId` do mesmo tenant); catálogo hierárquico (máx. 5 níveis); no máximo uma fila `isDefault` por tenant; `TeamMember` sem duplicatas
     - _Requisitos: 11.1, 11.2, 11.3, 11.4, 11.5, 11.6, 11.7_
 
-  - [ ]* 11.2 Escrever testes do serviço de organização/catálogo
+  - [x]* 11.2 Escrever testes do serviço de organização/catálogo
     - Nome inválido/duplicado; ciclo hierárquico; `parentId` de outro tenant; unicidade de fila padrão; `TeamMember` duplicado
     - _Requisitos: 11.2, 11.4, 11.5, 11.6_
 
-- [ ] 12. Checkpoint — domínio persistente validado
+- [x] 12. Checkpoint — domínio persistente validado
   - Garantir que todos os testes passem; em caso de dúvidas, perguntar ao usuário.
 
 - [ ] 13. Definir a interface `ChannelAdapter` e a suíte de contrato compartilhada
