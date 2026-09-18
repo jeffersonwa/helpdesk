@@ -175,44 +175,44 @@ A estratégia prioriza o **núcleo puro e testável** (`PriorityEngine`, `SlaEng
 - [x] 12. Checkpoint — domínio persistente validado
   - Garantir que todos os testes passem; em caso de dúvidas, perguntar ao usuário.
 
-- [ ] 13. Definir a interface `ChannelAdapter` e a suíte de contrato compartilhada
-  - [ ] 13.1 Implementar a interface `ChannelAdapter` e o registro de providers
+- [x] 13. Definir a interface `ChannelAdapter` e a suíte de contrato compartilhada
+  - [x] 13.1 Implementar a interface `ChannelAdapter` e o registro de providers
     - Criar `src/lib/channels/adapter.ts` com `ChannelAdapter` (`capabilities`, `verifyInbound`, `parseInbound`, `send`), `ChannelAccountRef`, `RawRequest`
     - Criar `src/lib/channels/registry.ts` que seleciona provider por env (`CHANNEL_WHATSAPP_PROVIDER`)
     - _Requisitos: 5.1, 5.7_
 
-  - [ ]* 13.2 Escrever a suíte de contrato compartilhada de adaptadores
+  - [x]* 13.2 Escrever a suíte de contrato compartilhada de adaptadores
     - **Property 12: Intercambialidade dos adapters** — mock e real produzem o mesmo formato de `InboundMessage`/`SendResult` para entradas equivalentes
     - **Validates: Requisitos 5.7**
     - Estruturar como função de teste reutilizável parametrizada por adaptador (executada contra o MOCK; contra o real quando houver credenciais)
 
-- [ ] 14. Implementar o WhatsAppCloudAdapter (Meta Cloud API oficial)
-  - [ ] 14.1 Implementar verificação de webhook (handshake GET e HMAC POST)
+- [x] 14. Implementar o WhatsAppCloudAdapter (Meta Cloud API oficial)
+  - [x] 14.1 Implementar verificação de webhook (handshake GET e HMAC POST)
     - Criar `src/lib/channels/whatsapp/cloud-adapter.ts` com `verifyInbound`: handshake GET valida `hub.verify_token`; POST valida `X-Hub-Signature-256` via HMAC SHA-256 com comparação em tempo constante, antes de qualquer processamento
     - Segredos (`app_secret`, `verify_token`, `access_token`) resolvidos via `secretRef`; recusar qualquer via não oficial (Web/QR/scraping) com auditoria
     - _Requisitos: 6.1, 6.2, 6.3, 6.4, 6.5, 6.6_
 
-  - [ ] 14.2 Implementar normalização (`parseInbound`) e envio (`send`) com janela de 24h, templates e mídia
+  - [x] 14.2 Implementar normalização (`parseInbound`) e envio (`send`) com janela de 24h, templates e mídia
     - `parseInbound` → `InboundMessage[]` (canal, `channelAccountId`, remetente externo, conteúdo, timestamp, `externalId`)
     - `send`: dentro da janela permite formato livre; fora da janela sem `templateName` rejeita antes de chamar a Cloud API; mídia via endpoints de mídia da Cloud API com armazenamento em object storage e referência em `Message.mediaUrl`; falha de mídia sinaliza pendência sem interromper as demais
     - Todas as chamadas contra `graph.facebook.com` via `fetch` nativo; múltiplos agentes por número oficial
     - _Requisitos: 6.1, 6.7, 6.8, 6.9, 6.10, 6.11_
 
-  - [ ]* 14.3 Escrever teste de propriedade da janela de 24h do WhatsApp
+  - [x]* 14.3 Escrever teste de propriedade da janela de 24h do WhatsApp
     - **Property 9: Janela de 24h do WhatsApp** — fora da janela, envio só é aceito com `templateName`; caso contrário é rejeitado
     - **Validates: Requisitos 6.8**
 
-  - [ ]* 14.4 Escrever testes de verificação de webhook e não vazamento de segredos
+  - [x]* 14.4 Escrever testes de verificação de webhook e não vazamento de segredos
     - Handshake válido/ inválido (403); assinatura HMAC ausente/inválida (401/403) sem persistência; **Property 11** — nenhum segredo aparece em logs, apenas `secretRef`
     - **Validates: Requisitos 6.3, 6.4, 6.5, 6.6, 17.3, 19.2**
 
-- [ ] 15. Implementar o WhatsAppMockAdapter (somente desenvolvimento)
-  - [ ] 15.1 Implementar o MOCK com a mesma interface e bloqueio em produção
+- [x] 15. Implementar o WhatsAppMockAdapter (somente desenvolvimento)
+  - [x] 15.1 Implementar o MOCK com a mesma interface e bloqueio em produção
     - Criar `src/lib/channels/whatsapp/mock-adapter.ts` implementando `ChannelAdapter` sem chamadas externas
     - Bloquear habilitação quando `NODE_ENV === "production"`, retornando erro claro
     - _Requisitos: 5.7, 5.8_
 
-  - [ ]* 15.2 Executar a suíte de contrato compartilhada contra o MOCK e validar bloqueio em produção
+  - [x]* 15.2 Executar a suíte de contrato compartilhada contra o MOCK e validar bloqueio em produção
     - Reutilizar a suíte da tarefa 13.2 contra o MOCK; testar que habilitar o MOCK em produção falha
     - **Validates: Requisitos 5.7, 5.8**
 
