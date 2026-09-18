@@ -216,70 +216,70 @@ A estratégia prioriza o **núcleo puro e testável** (`PriorityEngine`, `SlaEng
     - Reutilizar a suíte da tarefa 13.2 contra o MOCK; testar que habilitar o MOCK em produção falha
     - **Validates: Requisitos 5.7, 5.8**
 
-- [ ] 16. Implementar o roteador de ingestão (IngestionRouter)
-  - [ ] 16.1 Implementar `route(msg)` com resolução de tenant, idempotência e criação/atualização de conversa e ticket
+- [x] 16. Implementar o roteador de ingestão (IngestionRouter)
+  - [x] 16.1 Implementar `route(msg)` com resolução de tenant, idempotência e criação/atualização de conversa e ticket
     - Criar `src/lib/ingestion/router.ts` conforme pseudocódigo: resolver `ChannelAccount`→tenant; rejeitar se `account.companyId ≠ msg.companyId`; idempotência via `Message.externalId`; transação upsert `Conversation` + `Message` + (talvez) `Ticket`; canal desconhecido descartado com erro
     - Definir `windowExpiresAt = timestamp + 24h` quando o canal tem janela; enfileirar `webhook.dispatch` no outbox na criação
     - _Requisitos: 5.4, 5.5, 5.6, 6.12, 10.1, 10.2, 10.3, 10.4, 10.5, 10.7, 10.8, 1.6_
 
-  - [ ]* 16.2 Escrever teste de propriedade de idempotência de ingestão
+  - [x]* 16.2 Escrever teste de propriedade de idempotência de ingestão
     - **Property 5: Idempotência de ingestão** — processar a mesma `InboundMessage` duas vezes cria no máximo uma `Message` e um `Ticket`
     - **Validates: Requisitos 5.6, 6.12, 10.2**
 
-  - [ ]* 16.3 Escrever testes de integração de roteamento
+  - [x]* 16.3 Escrever testes de integração de roteamento
     - Incompatibilidade de tenant rejeitada; `ChannelAccount` não resolvida descarta; canal desconhecido descarta; ticket ativo reaproveitado vs. novo ticket
     - _Requisitos: 1.6, 5.5, 10.4, 10.5, 10.8_
 
-- [ ] 17. Implementar o ConversationService
-  - [ ] 17.1 Implementar upsert de conversa e persistência de mensagem
+- [x] 17. Implementar o ConversationService
+  - [x] 17.1 Implementar upsert de conversa e persistência de mensagem
     - Criar `src/lib/conversations/service.ts`: upsert de exatamente uma `Conversation` por (contato, canal); persistir `Message`; descartar duplicata por identificador de origem; falha de persistência não altera ticket e preserva estado
     - Restringir estado da conversa a OPEN/PENDING/RESOLVED/EXPIRED
     - _Requisitos: 10.1, 10.2, 10.3, 10.6, 10.7_
 
-  - [ ]* 17.2 Escrever testes do ConversationService
+  - [x]* 17.2 Escrever testes do ConversationService
     - Upsert único por contato+canal; duplicata descartada; falha de persistência preserva estado; estados inválidos rejeitados
     - _Requisitos: 10.1, 10.2, 10.3, 10.6_
 
-- [ ] 18. Implementar o adaptador de e-mail (EmailAdapter)
-  - [ ] 18.1 Implementar ingestão por inbound webhook e IMAP polling, e envio com thread
+- [x] 18. Implementar o adaptador de e-mail (EmailAdapter)
+  - [x] 18.1 Implementar ingestão por inbound webhook e IMAP polling, e envio com thread
     - Criar `src/lib/channels/email/adapter.ts`: `verifyInbound` valida assinatura do provedor; `parseInbound` normaliza em até 5s; IMAP polling configurável 30–300s (padrão 60) com até 3 tentativas; vínculo via `In-Reply-To`/`References`; nova conversa+ticket quando sem correspondência; resposta mantém cabeçalho de thread
     - Idempotência via `Message.externalId`
     - _Requisitos: 7.1, 7.2, 7.3, 7.4, 7.5, 7.6, 7.7_
 
-  - [ ]* 18.2 Escrever testes do EmailAdapter
+  - [x]* 18.2 Escrever testes do EmailAdapter
     - Assinatura inválida rejeita; retry IMAP; vínculo por thread; criação quando sem correspondência
     - _Requisitos: 7.2, 7.4, 7.5, 7.6_
 
-- [ ] 19. Implementar o formulário público seguro (PublicFormAdapter)
-  - [ ] 19.1 Implementar rate limiting, CAPTCHA, antispam e escopo de tenant por token
+- [x] 19. Implementar o formulário público seguro (PublicFormAdapter)
+  - [x] 19.1 Implementar rate limiting, CAPTCHA, antispam e escopo de tenant por token
     - Criar `src/lib/channels/public-form/adapter.ts`: rate limit ≤5/IP/min e ≤20/`ChannelAccount`/min (429 ao exceder); CAPTCHA verificado no servidor antes de persistir; honeypot + heurística + validação Zod estrita; escopo de tenant derivado de token público mapeado a `ChannelAccount` (não do corpo); token inválido/ausente/expirado rejeita sem revelar tenant; sem PII em log
     - Estender `src/lib/rate-limit.ts` existente (token-bucket persistido)
     - _Requisitos: 8.1, 8.2, 8.3, 8.4, 8.5, 8.6, 8.7, 8.8_
 
-  - [ ]* 19.2 Escrever testes do PublicFormAdapter
+  - [x]* 19.2 Escrever testes do PublicFormAdapter
     - Excesso de rate limit (429); CAPTCHA falho; honeypot; token inválido; ausência de PII em log
     - _Requisitos: 8.2, 8.4, 8.5, 8.7, 8.8_
 
-- [ ] 20. Implementar a ingestão via API (ApiAdapter)
-  - [ ] 20.1 Implementar criação/atualização de ticket via API autenticada
+- [x] 20. Implementar a ingestão via API (ApiAdapter)
+  - [x] 20.1 Implementar criação/atualização de ticket via API autenticada
     - Criar `src/lib/channels/api/adapter.ts`: processar sob o tenant da conta autenticada, ignorando tenant do payload; 401 se não autenticado; 403 se não autorizado; validação Zod (título 1–200, descrição 1–5.000, ≤50 anexos), 422 com campo/motivo em falha; resposta em até 2s sob carga nominal
     - _Requisitos: 9.1, 9.2, 9.3, 9.4, 9.5, 9.6_
 
-  - [ ]* 20.2 Escrever testes do ApiAdapter
+  - [x]* 20.2 Escrever testes do ApiAdapter
     - Não autenticado (401); não autorizado (403); payload inválido (422); tenant do payload ignorado
     - _Requisitos: 9.1, 9.2, 9.3, 9.5_
 
-- [ ] 21. Expor route handlers de webhooks e endpoints de ingestão
-  - [ ] 21.1 Implementar route handlers Next.js para os canais
+- [x] 21. Expor route handlers de webhooks e endpoints de ingestão
+  - [x] 21.1 Implementar route handlers Next.js para os canais
     - Criar `src/app/api/webhooks/whatsapp/route.ts` (GET verify + POST evento), `src/app/api/webhooks/email/route.ts`, `src/app/api/public-form/route.ts`, `src/app/api/tickets/route.ts` (API)
     - Cada handler delega ao adaptador correspondente, verifica assinatura/auth antes de qualquer efeito e responde rápido (trabalho pesado via outbox)
     - _Requisitos: 5.2, 5.3, 6.3, 6.5, 8.1, 9.1_
 
-  - [ ]* 21.2 Escrever testes de integração dos route handlers
+  - [x]* 21.2 Escrever testes de integração dos route handlers
     - Verificação/normalização em até 5s; assinatura inválida não gera `Message`/`Ticket`; resposta 200 rápida no WhatsApp
     - _Requisitos: 5.2, 5.3, 6.5, 6.6_
 
-- [ ] 22. Checkpoint — ingestão omnichannel ponta a ponta validada
+- [x] 22. Checkpoint — ingestão omnichannel ponta a ponta validada
   - Garantir que todos os testes passem; em caso de dúvidas, perguntar ao usuário.
 
 - [ ] 23. Implementar o outbox transacional e os workers idempotentes
