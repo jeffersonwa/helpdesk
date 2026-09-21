@@ -1,0 +1,36 @@
+# Contexto de build enxuto e seguro (tarefa 36.1).
+# NUNCA envie segredos nem artefatos locais para a imagem (Req. 18.5).
+
+# Dependências e build locais (reinstalados/reconstruídos na imagem).
+node_modules
+.next
+out
+build
+coverage
+
+# Segredos e ambiente local — jamais na imagem.
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+
+# Git e metadados.
+.git
+.gitignore
+
+# Ferramentas/config de editor e specs (não necessários em runtime).
+.kiro
+.vscode
+.idea
+
+# Logs e temporários.
+*.log
+*.tsbuildinfo
+npm-debug.log*
+
+# Docker/K8s (não precisam ir para dentro da imagem).
+Dockerfile
+docker-compose.yml
+.dockerignore
+k8s

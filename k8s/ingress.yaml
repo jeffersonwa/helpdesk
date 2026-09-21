@@ -1,0 +1,34 @@
+# Ingress — JÁ Helpdesk (tarefa 36.3).
+#
+# Expõe o serviço `app` no domínio público de produção com TLS. As annotations
+# assumem ingress-nginx + cert-manager (ClusterIssuer `letsencrypt-prod`);
+# ajuste ao seu controller/emissor. O webhook do WhatsApp fica sob o mesmo host:
+#   https://csc.nitecnologia.tec.br/api/webhooks/whatsapp
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: helpdesk
+  labels:
+    app.kubernetes.io/part-of: helpdesk
+  annotations:
+    cert-manager.io/cluster-issuer: "letsencrypt-prod"
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    # Uploads de mídia (anexos) via body maior.
+    nginx.ingress.kubernetes.io/proxy-body-size: "25m"
+spec:
+  ingressClassName: nginx
+  tls:
+    - hosts:
+        - csc.nitecnologia.tec.br
+      secretName: helpdesk-tls
+  rules:
+    - host: csc.nitecnologia.tec.br
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: helpdesk-app
+                port:
+                  number: 80

@@ -1,0 +1,101 @@
+# docker-compose — JÁ Helpdesk (tarefa 36.1).
+#
+# Fonte autoritativa: `.kiro/specs/helpdesk-omnichannel/design.md`
+# (seção "Implantação" → Docker Compose) e Requisito 18 (18.1..18.8).
+#
+# Serviços: app (web), worker (jobs), postgres, redis — os 4 exigidos por 18.1.
+#
+# SEGREDOS (Req. 18.5): este arquivo NÃO contém nenhum valor de segredo. Todas
+# as variáveis sensíveis vêm de `.env` (via `env_file`), que é git-ignored.
+# Use `.env.example` como modelo. Em produção, prefira um secret manager / os
+# secrets do orquestrador em vez de um arquivo `.env` em disco.
+#
+# Domínio público de produção: https://csc.nitecnologia.tec.br
+#   Webhook do WhatsApp: https://csc.nitecnologia.tec.br/api/webhooks/whatsapp
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      # Estes vêm do .env — sem valores literais aqui (Req. 18.5).
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    command: ["redis-server", "--save", "60", "1", "--appendonly", "no"]
+    volumes:
+      - redis-data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+      start_period: 5s
+
+  app:
+    build:
+      context: .
+      target: runner
+    restart: unless-stopped
+    # Segredos e config via arquivo de ambiente (nunca literais no compose).
+    env_file:
+      - .env
+    environment:
+      NODE_ENV: production
+      PORT: "3000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    ports:
+      - "3000:3000"
+    # O entrypoint valida segredos + aplica migrações antes de servir. O app só
+    # é considerado "pronto" quando o /api/health responde 200 (Req. 18.3, 18.7).
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "node",
+          "-e",
+          "fetch('http://localhost:3000/api/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))",
+        ]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      # Janela para migrações + boot antes de contabilizar falhas (Req. 18.2: ≤60s).
+      start_period: 60s
+
+  worker:
+    build:
+      context: .
+      target: worker
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      NODE_ENV: production
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      # O worker sobe após o app iniciar (migrações já aplicadas por ele).
+      app:
+        condition: service_healthy
+
+volumes:
+  postgres-data:
+  redis-data:

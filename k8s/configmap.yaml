@@ -1,0 +1,30 @@
+# ConfigMap — configuração NÃO sensível do JÁ Helpdesk (tarefa 36.3).
+#
+# Fonte autoritativa: `.kiro/specs/helpdesk-omnichannel/design.md`
+# (seção "Implantação" → Prontidão para Kubernetes) e Requisito 18 (18.4, 18.5).
+#
+# APENAS valores NÃO sensíveis. Segredos (DATABASE_URL, NEXTAUTH_SECRET, tokens
+# do WhatsApp, chaves S3, etc.) vão em um Secret separado (ver secret.example.yaml),
+# preferencialmente via External Secrets / Sealed Secrets — NUNCA aqui.
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: helpdesk-config
+  labels:
+    app.kubernetes.io/part-of: helpdesk
+data:
+  NODE_ENV: "production"
+  PORT: "3000"
+  # URL pública canônica (domínio de produção).
+  NEXTAUTH_URL: "https://csc.nitecnologia.tec.br"
+  # Provider do WhatsApp: oficial em produção. O MOCK é bloqueado quando
+  # NODE_ENV=production (regra inviolável do design).
+  CHANNEL_WHATSAPP_PROVIDER: "whatsapp_cloud"
+  # Intervalos dos workers (têm defaults no código; explicitados aqui).
+  OUTBOX_INTERVAL_MS: "5000"
+  ESCALATION_INTERVAL_MS: "60000"
+  # Object storage de mídia (S3 compatível) — config não sensível.
+  # As credenciais (access key / secret) ficam no Secret.
+  MEDIA_S3_ENDPOINT: "https://s3.example.com"
+  MEDIA_S3_BUCKET: "helpdesk-media"
+  MEDIA_S3_REGION: "us-east-1"

@@ -1,0 +1,19 @@
+# Service do serviço `app` — JÁ Helpdesk (tarefa 36.3).
+#
+# ClusterIP interno; a exposição externa é feita pelo Ingress (ingress.yaml).
+apiVersion: v1
+kind: Service
+metadata:
+  name: helpdesk-app
+  labels:
+    app.kubernetes.io/name: helpdesk-app
+    app.kubernetes.io/part-of: helpdesk
+spec:
+  type: ClusterIP
+  selector:
+    app.kubernetes.io/name: helpdesk-app
+  ports:
+    - name: http
+      port: 80
+      targetPort: http
+      protocol: TCP

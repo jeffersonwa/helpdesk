@@ -1,0 +1,80 @@
+# Deployment do serviço `worker` (outbox + escalonamento) — JÁ Helpdesk (tarefa 36.3).
+#
+# Fonte autoritativa: `.kiro/specs/helpdesk-omnichannel/design.md`
+# (seção "Implantação" → "worker como Deployment separado (ou CronJob para
+# escalonamento)") e Requisito 18 (18.4, 18.5).
+#
+# O worker é um processo separado (imagem stage `worker`) que roda os laços de
+# outbox + varredura de escalonamento. NÃO expõe portas e NÃO aplica migrações
+# (isso é responsabilidade do `app` — Req. 18.7). Uma única réplica evita
+# contenção desnecessária; o processamento do outbox já é idempotente.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: helpdesk-worker
+  labels:
+    app.kubernetes.io/name: helpdesk-worker
+    app.kubernetes.io/part-of: helpdesk
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: helpdesk-worker
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: helpdesk-worker
+        app.kubernetes.io/part-of: helpdesk
+    spec:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1001
+        fsGroup: 1001
+      containers:
+        - name: worker
+          # Imagem do stage `worker` (source TS + tsx + prod deps).
+          image: registry.example.com/helpdesk-worker:latest
+          imagePullPolicy: IfNotPresent
+          command: ["npm", "run", "worker"]
+          envFrom:
+            - configMapRef:
+                name: helpdesk-config
+            - secretRef:
+                name: helpdesk-secrets
+          resources:
+            requests:
+              cpu: "50m"
+              memory: "128Mi"
+            limits:
+              cpu: "300m"
+              memory: "256Mi"
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop: ["ALL"]
+---
+# ALTERNATIVA (comentada): rodar a varredura de escalonamento como CronJob em vez
+# de um laço contínuo. O intervalo ≤5 min (Req. 12.4) é respeitado por `*/5`.
+# O worker acima já cobre outbox + escalonamento; use este CronJob apenas se
+# preferir separar o escalonamento do laço de outbox.
+#
+# apiVersion: batch/v1
+# kind: CronJob
+# metadata:
+#   name: helpdesk-escalation
+# spec:
+#   schedule: "*/5 * * * *"
+#   jobTemplate:
+#     spec:
+#       template:
+#         spec:
+#           restartPolicy: Never
+#           containers:
+#             - name: escalation
+#               image: registry.example.com/helpdesk-worker:latest
+#               command: ["node", "--import", "tsx", "src/worker/escalation-once.ts"]
+#               envFrom:
+#                 - configMapRef: { name: helpdesk-config }
+#                 - secretRef: { name: helpdesk-secrets }

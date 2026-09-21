@@ -419,26 +419,26 @@ A estratégia prioriza o **núcleo puro e testável** (`PriorityEngine`, `SlaEng
     - Restrição por tenant/escopo; estado vazio; estado de erro
     - _Requisitos: 15.5, 15.6, 15.8_
 
-- [ ] 36. Implantação: Docker Compose, prontidão K8s e gestão de segredos
-  - [ ] 36.1 Criar Dockerfile, docker-compose e entrypoint com migrações e validação de segredos
+- [x] 36. Implantação: Docker Compose, prontidão K8s e gestão de segredos
+  - [x] 36.1 Criar Dockerfile, docker-compose e entrypoint com migrações e validação de segredos
     - Criar `Dockerfile` (Next.js standalone), `docker-compose.yml` com `app`, `worker`, `postgres`, `redis` e health checks; entrypoint aplica migrações Prisma pendentes antes de marcar `app` pronto; falha de migração interrompe início sem migração parcial
     - Validar segredos obrigatórios na inicialização (interromper e registrar qual segredo falta, sem expor valor); app stateless; segredos via env/secret manager
     - _Requisitos: 18.1, 18.2, 18.3, 18.4, 18.5, 18.6, 18.7, 18.8_
 
-  - [ ]* 36.2 Escrever testes de validação de bootstrap
+  - [x]* 36.2 Escrever testes de validação de bootstrap
     - Segredo obrigatório ausente interrompe start com identificação; falha de migração não aplica parciais
     - _Requisitos: 18.6, 18.8_
 
-  - [ ] 36.3 Adicionar manifestos de prontidão para Kubernetes
+  - [x] 36.3 Adicionar manifestos de prontidão para Kubernetes
     - Criar `k8s/` com Deployment do `app`, Deployment/CronJob do `worker`, `ConfigMap`, referência a `Secret`/External Secrets e storage de mídia externo (S3 compatível)
     - _Requisitos: 18.4, 18.5_
 
-- [ ] 37. Documentação: setup do WhatsApp e ADRs
-  - [ ] 37.1 Escrever `docs/whatsapp-setup.md`
+- [x] 37. Documentação: setup do WhatsApp e ADRs
+  - [x] 37.1 Escrever `docs/whatsapp-setup.md`
     - Documentar conexão de credenciais reais da Meta: App, `phone_number_id`, `WABA`, `verify_token`, assinatura HMAC, configuração de webhook e variáveis de ambiente/`secretRef`; reforçar que apenas a Cloud API oficial é permitida
     - _Requisitos: 6.1, 6.3, 6.5, 18.5_
 
-  - [ ] 37.2 Escrever ADRs em `docs/adr/`
+  - [x] 37.2 Escrever ADRs em `docs/adr/`
     - Registrar decisões: padrão provider/adapter de canais, outbox transacional, motores puros, modelo RBAC por permissão+escopo, WhatsApp exclusivamente via Cloud API oficial
     - _Requisitos: 5.1, 6.2, 17.1_
 

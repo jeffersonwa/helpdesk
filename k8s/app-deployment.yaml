@@ -1,0 +1,89 @@
+# Deployment do serviço `app` (web) — JÁ Helpdesk (tarefa 36.3).
+#
+# Fonte autoritativa: `.kiro/specs/helpdesk-omnichannel/design.md`
+# (seção "Implantação" → Prontidão para Kubernetes) e Requisito 18 (18.3, 18.4, 18.5, 18.7).
+#
+# App STATELESS e escalável horizontalmente (Req. 18.4): sem volume local, sessão
+# em JWT. Probes de readiness/liveness apontam para /api/health (Req. 18.3, 19.3).
+# A imagem é a mesma do Compose (stage `runner`); o entrypoint valida segredos e
+# aplica migrações antes de o pod ficar "ready" (Req. 18.6, 18.7, 18.8).
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: helpdesk-app
+  labels:
+    app.kubernetes.io/name: helpdesk-app
+    app.kubernetes.io/part-of: helpdesk
+spec:
+  replicas: 2 # stateless → múltiplas réplicas (Req. 18.4)
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: helpdesk-app
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 0
+      maxSurge: 1
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: helpdesk-app
+        app.kubernetes.io/part-of: helpdesk
+    spec:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1001
+        fsGroup: 1001
+      containers:
+        - name: app
+          # Substitua pela imagem publicada no seu registry (stage `runner`).
+          image: registry.example.com/helpdesk:latest
+          imagePullPolicy: IfNotPresent
+          ports:
+            - name: http
+              containerPort: 3000
+          # Config não sensível + segredos (via Secret). Nada de valores literais.
+          envFrom:
+            - configMapRef:
+                name: helpdesk-config
+            - secretRef:
+                name: helpdesk-secrets
+          # Readiness: só recebe tráfego quando /api/health responde 200.
+          # (o entrypoint já aplicou migrações antes de o servidor subir.)
+          readinessProbe:
+            httpGet:
+              path: /api/health
+              port: http
+            initialDelaySeconds: 10
+            periodSeconds: 10
+            timeoutSeconds: 3
+            failureThreshold: 3
+          # Liveness: reinicia o pod se o app travar.
+          livenessProbe:
+            httpGet:
+              path: /api/health
+              port: http
+            initialDelaySeconds: 30
+            periodSeconds: 20
+            timeoutSeconds: 3
+            failureThreshold: 3
+          # Startup: janela ampla para migrações + boot antes de contabilizar
+          # falhas de liveness (Req. 18.2: pronto em ≤60s).
+          startupProbe:
+            httpGet:
+              path: /api/health
+              port: http
+            periodSeconds: 5
+            failureThreshold: 12 # ~60s
+          resources:
+            requests:
+              cpu: "100m"
+              memory: "256Mi"
+            limits:
+              cpu: "500m"
+              memory: "512Mi"
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: false
+            capabilities:
+              drop: ["ALL"]
