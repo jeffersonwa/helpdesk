@@ -282,44 +282,44 @@ A estratégia prioriza o **núcleo puro e testável** (`PriorityEngine`, `SlaEng
 - [x] 22. Checkpoint — ingestão omnichannel ponta a ponta validada
   - Garantir que todos os testes passem; em caso de dúvidas, perguntar ao usuário.
 
-- [ ] 23. Implementar o outbox transacional e os workers idempotentes
-  - [ ] 23.1 Implementar o dispatcher do outbox e o worker de processamento
+- [x] 23. Implementar o outbox transacional e os workers idempotentes
+  - [x] 23.1 Implementar o dispatcher do outbox e o worker de processamento
     - Criar `src/lib/outbox/dispatcher.ts` (enfileirar `OutboxEvent` na mesma transação do estado) e `src/lib/outbox/worker.ts` (processar PENDING/`nextRunAt`, idempotente, backoff exponencial 60s→3600s, marcar SENT/FAILED após limite)
     - Criar entrypoint de worker `src/worker/index.ts` (processo separado)
     - _Requisitos: 17.1, 17.4, 17.5, 17.6_
 
-  - [ ] 23.2 Implementar o worker de SLA/escalonamento
+  - [x] 23.2 Implementar o worker de SLA/escalonamento
     - Criar `src/worker/escalation.ts`: avaliar tickets ativos contra `EscalationRule` em intervalos ≤5 min usando `SlaEngine` + `selectEscalations`; ao satisfazer gatilho não escalado, gravar `EscalationLog`, reatribuir e enfileirar notificação no outbox
     - _Requisitos: 12.4, 12.5_
 
-  - [ ]* 23.3 Escrever testes dos workers
+  - [x]* 23.3 Escrever testes dos workers
     - Idempotência do processamento do outbox; backoff e FAILED após 5 tentativas; escalonamento aplicado uma única vez por gatilho
     - _Requisitos: 12.5, 17.5, 17.6_
 
-- [ ] 24. Implementar o motor de aprovações (ApprovalEngine)
-  - [ ] 24.1 Implementar criação e decisão de aprovações
+- [x] 24. Implementar o motor de aprovações (ApprovalEngine)
+  - [x] 24.1 Implementar criação e decisão de aprovações
     - Criar `src/lib/engines/approval.ts`: ao requerer aprovação, criar `Approval` PENDING e transicionar ticket para PENDING_APPROVAL; decisão por aprovador autorizado grava APPROVED/REJECTED com `decidedAt`; usuário sem autorização é rejeitado e a `Approval` permanece PENDING
     - Aplicar `Authorization.assert` na decisão
     - _Requisitos: 12.8, 12.9, 12.11_
 
-  - [ ]* 24.2 Escrever testes do ApprovalEngine
+  - [x]* 24.2 Escrever testes do ApprovalEngine
     - Transição para PENDING_APPROVAL; decisão autorizada; decisão não autorizada preserva PENDING
     - _Requisitos: 12.8, 12.9, 12.11_
 
-- [ ] 25. Implementar o serviço de auditoria (AuditService) e LGPD
-  - [ ] 25.1 Implementar trilha imutável de auditoria
+- [x] 25. Implementar o serviço de auditoria (AuditService) e LGPD
+  - [x] 25.1 Implementar trilha imutável de auditoria
     - Criar `src/lib/audit/service.ts`: gravar exatamente um `AuditLog` (`actor`, `action`, `before`, `after`, `ip`, `timestamp`) por operação sensível bem-sucedida; recusar update/delete de `AuditLog`; sem segredos/PII sensível no registro
     - _Requisitos: 13.1, 13.2, 19.2_
 
-  - [ ] 25.2 Implementar retenção, exportação e eliminação de dados pessoais (LGPD)
+  - [x] 25.2 Implementar retenção, exportação e eliminação de dados pessoais (LGPD)
     - Criar `src/lib/lgpd/service.ts`: política de retenção por tenant com rotina de expurgo/anonimização; exportação estruturada em ≤15 dias; eliminação/anonimização em ≤15 dias preservando auditoria legal; minimização e base legal registrada
     - _Requisitos: 13.3, 13.4, 13.5, 13.6, 13.7_
 
-  - [ ]* 25.3 Escrever teste de propriedade de auditoria completa
+  - [x]* 25.3 Escrever teste de propriedade de auditoria completa
     - **Property 10: Auditoria completa** — toda operação sensível bem-sucedida gera exatamente um `AuditLog` com `before`/`after` consistentes
     - **Validates: Requisitos 13.1**
 
-  - [ ]* 25.4 Escrever testes de imutabilidade e LGPD
+  - [x]* 25.4 Escrever testes de imutabilidade e LGPD
     - Update/delete de `AuditLog` rejeitado; exportação/eliminação preservam auditoria legal
     - _Requisitos: 13.2, 13.5_
 
