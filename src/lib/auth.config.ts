@@ -2,6 +2,11 @@ import type { NextAuthConfig } from "next-auth";
 
 // Config edge-safe: sem Prisma, sem bcrypt
 export const authConfig = {
+  // Atrás de um proxy reverso (Traefik), o host chega via cabeçalhos
+  // encaminhados. O NextAuth v5 exige confiar no host explicitamente, senão
+  // rejeita com `UntrustedHost`. Em produção o host canônico é fixado por
+  // NEXTAUTH_URL (https://csc.nitecnologia.tec.br), então confiar é seguro.
+  trustHost: true,
   pages: {
     signIn: "/login",
   },
