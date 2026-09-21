@@ -4,14 +4,36 @@ import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { signOut, useSession } from "next-auth/react";
-import { LayoutDashboard, Ticket, Users, BarChart2, LogOut, UserCircle, Building2 } from "lucide-react";
+import {
+  LayoutDashboard,
+  Ticket,
+  Users,
+  BarChart2,
+  LogOut,
+  UserCircle,
+  Building2,
+  MessagesSquare,
+  Inbox,
+  BookOpen,
+  ShieldCheck,
+  Radio,
+} from "lucide-react";
 
 const links = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
   { href: "/tickets", label: "Tickets", icon: Ticket },
+  { href: "/conversations", label: "Conversas", icon: MessagesSquare },
+  { href: "/queues", label: "Filas", icon: Inbox, roles: ["ADMIN", "SUPERADMIN", "SERVICE_MANAGER", "SUPERVISOR"] },
+  { href: "/catalog", label: "Catálogo", icon: BookOpen, roles: ["ADMIN", "SUPERADMIN", "SERVICE_MANAGER"] },
   { href: "/users", label: "Usuários", icon: Users, roles: ["ADMIN", "SUPERADMIN"] },
   { href: "/companies", label: "Empresas", icon: Building2, roles: ["SUPERADMIN"] },
   { href: "/reports", label: "Relatórios", icon: BarChart2, roles: ["ADMIN", "SUPERADMIN", "AGENT"] },
+];
+
+// Seção Admin — gated por ADMIN/SUPERADMIN (UX; autorização real é no backend).
+const adminLinks = [
+  { href: "/admin/rbac", label: "RBAC", icon: ShieldCheck, roles: ["ADMIN", "SUPERADMIN"] },
+  { href: "/admin/channels", label: "Canais", icon: Radio, roles: ["ADMIN", "SUPERADMIN"] },
 ];
 
 export default function Sidebar() {
@@ -43,6 +65,28 @@ export default function Sidebar() {
             </Link>
           );
         })}
+
+        {adminLinks.some((l) => l.roles.includes(role)) && (
+          <div className="pt-4 mt-2 border-t">
+            <p className="px-3 pb-1 text-xs font-semibold uppercase tracking-wide text-gray-400">Admin</p>
+            {adminLinks.map(({ href, label, icon: Icon, roles }) => {
+              if (roles && !roles.includes(role)) return null;
+              const active = pathname.startsWith(href);
+              return (
+                <Link
+                  key={href}
+                  href={href}
+                  className={`flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors ${
+                    active ? "bg-blue-50 text-blue-700 font-medium" : "text-gray-600 hover:bg-gray-50"
+                  }`}
+                >
+                  <Icon size={18} />
+                  {label}
+                </Link>
+              );
+            })}
+          </div>
+        )}
       </nav>
 
       <div className="p-4 border-t">

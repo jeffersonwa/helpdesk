@@ -390,32 +390,32 @@ A estratégia prioriza o **núcleo puro e testável** (`PriorityEngine`, `SlaEng
     - Criação inválida (sem permissão/nome vazio/duplicado); atribuição duplicada; papel global
     - _Requisitos: 3.2, 3.5, 3.6_
 
-- [ ] 33. Estender o frontend: console de atendimento (rotas `(app)`)
-  - [ ] 33.1 Adicionar rotas de conversas, filas, catálogo e admin (RBAC/canais)
+- [x] 33. Estender o frontend: console de atendimento (rotas `(app)`)
+  - [x] 33.1 Adicionar rotas de conversas, filas, catálogo e admin (RBAC/canais)
     - Estender `src/app/(app)/` com `conversations`, `queues`, `catalog`, `admin/rbac`, `admin/channels`; leituras via Server Components filtradas por tenant; formulários em Client Components com `react-hook-form` + Zod
     - Ampliar `src/app/(app)/tickets/` para os novos campos (impacto/urgência/prioridade/categoria/fila/time)
     - _Requisitos: 2.2, 4.2, 11.1, 15.1_
 
-  - [ ]* 33.2 Escrever testes de componentes/ações do console
+  - [x]* 33.2 Escrever testes de componentes/ações do console
     - Ações de servidor aplicam autorização no backend independentemente da UI; leituras filtradas por tenant
     - _Requisitos: 2.2, 1.3_
 
-- [ ] 34. Estender o frontend: portal de autoatendimento (grupo `(portal)`)
-  - [ ] 34.1 Criar o grupo de rotas `(portal)` com base de conhecimento e chamados do solicitante
+- [x] 34. Estender o frontend: portal de autoatendimento (grupo `(portal)`)
+  - [x] 34.1 Criar o grupo de rotas `(portal)` com base de conhecimento e chamados do solicitante
     - Criar `src/app/(portal)/` com listagem/busca de artigos publicados (Server Components filtrados por tenant) e lista de chamados do solicitante autenticado; acesso cross-tenant retorna "não encontrado"
     - Formulários de busca com `react-hook-form` + Zod
     - _Requisitos: 14.1, 14.2, 14.4, 14.5, 14.6_
 
-  - [ ]* 34.2 Escrever testes do portal
+  - [x]* 34.2 Escrever testes do portal
     - Somente artigos/chamados do tenant do solicitante; artigo não publicado oculto; cross-tenant "não encontrado"
     - _Requisitos: 14.3, 14.4, 14.5_
 
-- [ ] 35. Estender o frontend: dashboards e relatórios
-  - [ ] 35.1 Criar as páginas de dashboards/KPIs consumindo o serviço de relatórios
+- [x] 35. Estender o frontend: dashboards e relatórios
+  - [x] 35.1 Criar as páginas de dashboards/KPIs consumindo o serviço de relatórios
     - Estender `src/app/(app)/reports/` com métricas do serviço de relatórios; renderização em ≤5s; ausência de dados exibe zero; falha exibe erro preservando última visualização
     - _Requisitos: 15.1, 15.7, 15.8_
 
-  - [ ]* 35.2 Escrever testes das páginas de relatório
+  - [x]* 35.2 Escrever testes das páginas de relatório
     - Restrição por tenant/escopo; estado vazio; estado de erro
     - _Requisitos: 15.5, 15.6, 15.8_
 

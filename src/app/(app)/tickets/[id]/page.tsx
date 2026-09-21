@@ -1,7 +1,7 @@
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { notFound } from "next/navigation";
-import { Priority, TicketStatus } from "@prisma/client";
+import { Impact, Priority, TicketStatus, Urgency } from "@prisma/client";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { slaStatus } from "@/lib/sla";
@@ -34,6 +34,12 @@ const priorityLabels: Record<Priority, string> = {
   CRITICAL: "Crítica",
 };
 
+const levelLabels: Record<Impact | Urgency, string> = {
+  LOW: "Baixo",
+  MEDIUM: "Médio",
+  HIGH: "Alto",
+};
+
 export default async function TicketDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const session = await auth();
   const { id } = await params;
@@ -42,6 +48,7 @@ export default async function TicketDetailPage({ params }: { params: Promise<{ i
     include: {
       createdBy: { select: { id: true, name: true, email: true } },
       assignedTo: { select: { id: true, name: true } },
+      queue: { select: { name: true } },
       comments: {
         include: { author: { select: { id: true, name: true, role: true } } },
         orderBy: { createdAt: "asc" },
@@ -50,6 +57,46 @@ export default async function TicketDetailPage({ params }: { params: Promise<{ i
   });
 
   if (!ticket) notFound();
+
+  // Resolve nomes das classificações (IDs armazenados no ticket). Todas as
+  // buscas são escopadas por companyId da sessão (isolamento de tenant).
+  const companyId = session!.user.companyId;
+  const [service, category, subcategory, categoryItem, unit, department, team] = await Promise.all([
+    ticket.serviceId
+      ? prisma.catalogService.findFirst({ where: { id: ticket.serviceId, companyId }, select: { name: true } })
+      : null,
+    ticket.categoryId
+      ? prisma.category.findFirst({ where: { id: ticket.categoryId, companyId }, select: { name: true } })
+      : null,
+    ticket.subcategoryId
+      ? prisma.subcategory.findFirst({ where: { id: ticket.subcategoryId, category: { companyId } }, select: { name: true } })
+      : null,
+    ticket.categoryItemId
+      ? prisma.categoryItem.findFirst({
+          where: { id: ticket.categoryItemId, subcategory: { category: { companyId } } },
+          select: { name: true },
+        })
+      : null,
+    ticket.unitId ? prisma.orgUnit.findFirst({ where: { id: ticket.unitId, companyId }, select: { name: true } }) : null,
+    ticket.departmentId
+      ? prisma.department.findFirst({ where: { id: ticket.departmentId, companyId }, select: { name: true } })
+      : null,
+    ticket.teamId ? prisma.team.findFirst({ where: { id: ticket.teamId, companyId }, select: { name: true } }) : null,
+  ]);
+
+  const classification: { label: string; value: string }[] = [
+    { label: "Impacto", value: levelLabels[ticket.impact] },
+    { label: "Urgência", value: levelLabels[ticket.urgency] },
+    { label: "Prioridade", value: priorityLabels[ticket.priority] },
+    { label: "Fila", value: ticket.queue?.name ?? "—" },
+    { label: "Time", value: team?.name ?? "—" },
+    { label: "Unidade", value: unit?.name ?? "—" },
+    { label: "Departamento", value: department?.name ?? "—" },
+    { label: "Serviço", value: service?.name ?? "—" },
+    { label: "Categoria", value: category?.name ?? "—" },
+    { label: "Subcategoria", value: subcategory?.name ?? "—" },
+    { label: "Item", value: categoryItem?.name ?? "—" },
+  ];
 
   const sla = slaStatus(ticket.slaDeadline);
   const isAgent = ["ADMIN", "SUPERADMIN", "AGENT"].includes(session!.user.role);
@@ -93,6 +140,19 @@ export default async function TicketDetailPage({ params }: { params: Promise<{ i
             SLA: {format(ticket.slaDeadline, "dd/MM/yyyy HH:mm", { locale: ptBR })}
           </p>
         )}
+      </div>
+
+      {/* Classificação (impacto/urgência/prioridade + catálogo + roteamento) */}
+      <div className="bg-white rounded-2xl shadow-sm border p-6 mb-6">
+        <h2 className="font-semibold mb-4 text-gray-900">Classificação</h2>
+        <dl className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+          {classification.map((c) => (
+            <div key={c.label}>
+              <dt className="text-xs text-gray-400">{c.label}</dt>
+              <dd className="text-sm text-gray-800">{c.value}</dd>
+            </div>
+          ))}
+        </dl>
       </div>
 
       {isAgent && (
