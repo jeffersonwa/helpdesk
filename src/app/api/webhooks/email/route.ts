@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { sendEmail } from "@/lib/email";
 import { rateLimit, getClientIp } from "@/lib/rate-limit";
+import { nextTicketNumber } from "@/lib/tickets/sequence";
 import crypto from "crypto";
 
 function timingSafeEqual(a: string, b: string): boolean {
@@ -103,15 +104,19 @@ export async function POST(req: NextRequest) {
     .trim()
     .slice(0, 255) || "(sem assunto)";
 
-  const ticket = await prisma.ticket.create({
-    data: {
-      title,
-      description,
-      status: "OPEN",
-      priority: "MEDIUM",
-      companyId: user.companyId,
-      createdById: user.id,
-    },
+  const ticket = await prisma.$transaction(async (tx) => {
+    const number = await nextTicketNumber(tx, user.companyId);
+    return tx.ticket.create({
+      data: {
+        number,
+        title,
+        description,
+        status: "OPEN",
+        priority: "MEDIUM",
+        companyId: user.companyId,
+        createdById: user.id,
+      },
+    });
   });
 
   const ticketUrl = `${process.env.NEXTAUTH_URL}/tickets/${ticket.id}`;

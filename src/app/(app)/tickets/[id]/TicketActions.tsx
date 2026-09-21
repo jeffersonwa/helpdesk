@@ -11,6 +11,7 @@ const statusLabels: Record<TicketStatus, string> = {
   PENDING_APPROVAL: "Aguardando aprovação",
   RESOLVED: "Resolvido",
   CLOSED: "Fechado",
+  CANCELLED: "Cancelado",
 };
 
 const priorityLabels: Record<Priority, string> = {

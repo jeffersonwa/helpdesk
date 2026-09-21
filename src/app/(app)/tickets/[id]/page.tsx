@@ -16,6 +16,7 @@ const statusLabels: Record<TicketStatus, string> = {
   PENDING_APPROVAL: "Aguardando aprovação",
   RESOLVED: "Resolvido",
   CLOSED: "Fechado",
+  CANCELLED: "Cancelado",
 };
 
 const statusColors: Record<TicketStatus, string> = {
@@ -25,6 +26,7 @@ const statusColors: Record<TicketStatus, string> = {
   PENDING_APPROVAL: "bg-amber-100 text-amber-700",
   RESOLVED: "bg-green-100 text-green-700",
   CLOSED: "bg-gray-100 text-gray-600",
+  CANCELLED: "bg-gray-100 text-gray-500",
 };
 
 const priorityLabels: Record<Priority, string> = {

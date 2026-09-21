@@ -442,8 +442,10 @@ A estratégia prioriza o **núcleo puro e testável** (`PriorityEngine`, `SlaEng
     - Registrar decisões: padrão provider/adapter de canais, outbox transacional, motores puros, modelo RBAC por permissão+escopo, WhatsApp exclusivamente via Cloud API oficial
     - _Requisitos: 5.1, 6.2, 17.1_
 
-- [ ] 38. Checkpoint final — suíte completa e integração ponta a ponta
+- [x] 38. Checkpoint final — suíte completa e integração ponta a ponta
   - Garantir que todos os testes passem e `npm run build` conclua; em caso de dúvidas, perguntar ao usuário.
+  - Resultado: `npm run build` conclui (44 rotas, output standalone). Suíte de testes 439/439 passando (427 unitários + 12 de integração/property com Postgres via túnel SSH). `npm run typecheck` (gate dedicado em `tsconfig.typecheck.json`) 100% limpo no código de produção.
+  - Correções deste checkpoint: (a) tipos vendorizados para `next-auth`/`lucide-react` em `src/types/vendor/` mapeados via `paths` só no `tsconfig.typecheck.json` (as versões beta instaladas não publicam seus `.d.ts` neste ambiente; `paths` não pode ir ao tsconfig principal senão o Turbopack resolveria o módulo para o `.d.ts`); `next build` usa `typescript.ignoreBuildErrors` e delega o type-check ao `npm run typecheck`; (b) resolvida colisão de rotas paralelas movendo `(portal)/kb` e `(portal)/tickets` para `(portal)/portal/kb` e `(portal)/portal/tickets`; (c) extraídas as constantes puras de período para `reports/periods.ts`, evitando que o Client Component `PeriodSelector` arraste `@/lib/prisma` (pg) para o bundle do browser; (d) adicionada a chave `CANCELLED` aos mapas `Record<TicketStatus,...>` legados e o `number` sequencial (via `nextTicketNumber` em transação) nos `create` de `api/tickets/route.ts` e `api/webhooks/email/route.ts`.
 
 ## Notes
 

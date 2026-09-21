@@ -2,7 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { REPORT_PERIODS, type ReportPeriodKey } from "./data";
+import { REPORT_PERIODS, type ReportPeriodKey } from "./periods";
 
 /**
  * Seletor de período do relatório (tarefa 35.1).

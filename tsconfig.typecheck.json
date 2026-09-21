@@ -1,0 +1,23 @@
+{
+  "//": "Config dedicada ao gate de type-check (`npm run typecheck`). Estende a base e adiciona `paths` que apontam next-auth/lucide-react para os .d.ts vendorizados em src/types/vendor. Esses paths NÃO entram no tsconfig.json principal porque o Turbopack também lê `paths` e resolveria o módulo para o .d.ts (sem runtime), quebrando o build. Aqui só o `tsc` os usa.",
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "paths": {
+      "@/*": ["./src/*"],
+      "next-auth": ["./src/types/vendor/next-auth.d.ts"],
+      "next-auth/react": ["./src/types/vendor/next-auth__react.d.ts"],
+      "next-auth/providers/credentials": [
+        "./src/types/vendor/next-auth__providers__credentials.d.ts"
+      ],
+      "next-auth/jwt": ["./src/types/vendor/next-auth__jwt.d.ts"],
+      "lucide-react": ["./src/types/vendor/lucide-react.d.ts"]
+    }
+  },
+  "exclude": [
+    "node_modules",
+    "**/__tests__/**",
+    "**/*.test.ts",
+    "**/*.test.tsx",
+    "src/lib/__tests__/setup.ts"
+  ]
+}

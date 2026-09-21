@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { calcSlaDeadline } from "@/lib/sla";
+import { nextTicketNumber } from "@/lib/tickets/sequence";
 import { z } from "zod";
 import { Priority, TicketStatus } from "@prisma/client";
 
@@ -61,13 +62,19 @@ export async function POST(req: NextRequest) {
 
   const slaDeadline = await calcSlaDeadline(session.user.companyId, parsed.data.priority);
 
-  const ticket = await prisma.ticket.create({
-    data: {
-      ...parsed.data,
-      companyId: session.user.companyId,
-      createdById: session.user.id,
-      slaDeadline,
-    },
+  // Reserva o número sequencial por tenant e cria o ticket na MESMA transação
+  // (atomicidade da reserva + uso), consistente com o TicketService.
+  const ticket = await prisma.$transaction(async (tx) => {
+    const number = await nextTicketNumber(tx, session.user.companyId);
+    return tx.ticket.create({
+      data: {
+        ...parsed.data,
+        number,
+        companyId: session.user.companyId,
+        createdById: session.user.id,
+        slaDeadline,
+      },
+    });
   });
 
   return NextResponse.json(ticket, { status: 201 });
