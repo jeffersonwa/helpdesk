@@ -323,45 +323,45 @@ A estratégia prioriza o **núcleo puro e testável** (`PriorityEngine`, `SlaEng
     - Update/delete de `AuditLog` rejeitado; exportação/eliminação preservam auditoria legal
     - _Requisitos: 13.2, 13.5_
 
-- [ ] 26. Implementar a base de conhecimento (KnowledgeBaseService)
-  - [ ] 26.1 Implementar CRUD e busca de artigos filtrados por tenant e publicação
+- [x] 26. Implementar a base de conhecimento (KnowledgeBaseService)
+  - [x] 26.1 Implementar CRUD e busca de artigos filtrados por tenant e publicação
     - Criar `src/lib/kb/service.ts`: listar/buscar apenas artigos publicados do tenant (relevância, ≤3s); ocultar rascunhos/arquivados de listagem, busca e acesso direto; negar acesso cross-tenant como "não encontrado"; busca com termo 1–200 e mensagem de ausência de resultados preservando o termo
     - _Requisitos: 14.2, 14.3, 14.5, 14.6, 14.7_
 
-  - [ ]* 26.2 Escrever testes do KnowledgeBaseService
+  - [x]* 26.2 Escrever testes do KnowledgeBaseService
     - Rascunho oculto no acesso direto; cross-tenant como não encontrado; busca sem resultados
     - _Requisitos: 14.3, 14.5, 14.7_
 
-- [ ] 27. Implementar cálculo de KPIs e relatórios (backend)
-  - [ ] 27.1 Implementar o serviço de métricas filtrado por tenant e escopo
+- [x] 27. Implementar cálculo de KPIs e relatórios (backend)
+  - [x] 27.1 Implementar o serviço de métricas filtrado por tenant e escopo
     - Criar `src/lib/reports/service.ts`: contagem por status/fila; tempo de primeira resposta (min entre abertura e primeira resposta); taxa de violação de SLA (0–100%, 2 casas); throughput por canal; restringir ao `companyId` e ao escopo do usuário; ausência de dados → métricas zeradas; falha/timeout ≤5s → erro preservando última visualização
     - _Requisitos: 15.1, 15.2, 15.3, 15.4, 15.5, 15.6, 15.7, 15.8_
 
-  - [ ]* 27.2 Escrever testes do serviço de relatórios
+  - [x]* 27.2 Escrever testes do serviço de relatórios
     - Cálculo de primeira resposta e taxa de violação; filtragem por escopo; período vazio zerado
     - _Requisitos: 15.2, 15.3, 15.6, 15.8_
 
-- [ ] 28. Implementar automação de tarefas repetitivas
-  - [ ] 28.1 Implementar o motor de automação por conta de serviço
+- [x] 28. Implementar automação de tarefas repetitivas
+  - [x] 28.1 Implementar o motor de automação por conta de serviço
     - Criar `src/lib/automation/service.ts`: executar sob o tenant da conta de serviço; ao satisfazer condição, executar ação em ≤60s e auditar; falha registra auditoria, não aplica efeitos parciais e reagenda em ≤3 tentativas com backoff (via outbox); limite de 100 regras ativas por tenant
     - _Requisitos: 16.1, 16.2, 16.3, 16.4_
 
-  - [ ]* 28.2 Escrever testes do motor de automação
+  - [x]* 28.2 Escrever testes do motor de automação
     - Execução sob tenant correto; falha sem efeitos parciais + reagendamento; limite de 100 regras
     - _Requisitos: 16.1, 16.3, 16.4_
 
-- [ ] 29. Implementar webhooks de saída assinados (WebhookDispatcher)
-  - [ ] 29.1 Implementar disparo assinado por HMAC via outbox
+- [x] 29. Implementar webhooks de saída assinados (WebhookDispatcher)
+  - [x] 29.1 Implementar disparo assinado por HMAC via outbox
     - Criar `src/lib/webhooks/dispatcher.ts`: enfileirar disparo no outbox em ≤5s (`attempts=0`, `nextRunAt=now`); assinar com HMAC-SHA256 usando o segredo de `secretRef`, incluindo assinatura e timestamp no cabeçalho; sucesso somente com resposta de sucesso em ≤10s (SENT); backoff 60s→3600s; FAILED + alerta após 5 tentativas
     - Armazenar apenas `secretRef`, nunca o valor
     - _Requisitos: 17.1, 17.2, 17.3, 17.4, 17.5, 17.6_
 
-  - [ ]* 29.2 Escrever testes do WebhookDispatcher
+  - [x]* 29.2 Escrever testes do WebhookDispatcher
     - Assinatura HMAC + timestamp no cabeçalho; sucesso apenas com 2xx em ≤10s; FAILED após 5 tentativas; `secretRef` nunca vaza
     - _Requisitos: 17.2, 17.4, 17.6, 17.3_
 
-- [ ] 30. Implementar observabilidade (logs, métricas, health)
-  - [ ] 30.1 Implementar logger estruturado com mascaramento de segredos/PII
+- [x] 30. Implementar observabilidade (logs, métricas, health)
+  - [x] 30.1 Implementar logger estruturado com mascaramento de segredos/PII
     - Criar `src/lib/observability/logger.ts`: JSON com `companyId`, `requestId`, `channel`, severidade, timestamp; garantir que nenhum segredo apareça (apenas `secretRef`) e mascarar PII
     - _Requisitos: 19.1, 19.2_
 
@@ -370,15 +370,15 @@ A estratégia prioriza o **núcleo puro e testável** (`PriorityEngine`, `SlaEng
     - Criar `src/lib/observability/metrics.ts` expondo tickets por status/fila, tempo de primeira resposta, taxa de violação de SLA, throughput por canal, falhas de outbox
     - _Requisitos: 19.3, 19.4, 19.5_
 
-  - [ ]* 30.3 Escrever teste de propriedade de não vazamento de segredos
+  - [x]* 30.3 Escrever teste de propriedade de não vazamento de segredos
     - **Property 11: Não vazamento de segredos** — nenhum valor de segredo aparece em logs/telemetria; apenas `secretRef`
     - **Validates: Requisitos 19.2, 18.5**
 
-  - [ ]* 30.4 Escrever testes do health check
+  - [x]* 30.4 Escrever testes do health check
     - DB/fila indisponível → 503 unhealthy; saudável em ≤2s
     - _Requisitos: 19.3, 19.4_
 
-- [ ] 31. Checkpoint — serviços de backend e efeitos externos validados
+- [x] 31. Checkpoint — serviços de backend e efeitos externos validados
   - Garantir que todos os testes passem; em caso de dúvidas, perguntar ao usuário.
 
 - [ ] 32. Implementar CRUD e atribuição de RBAC (backend + persistência)
