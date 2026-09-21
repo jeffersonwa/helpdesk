@@ -5,9 +5,11 @@
  *  - segredo obrigatório ausente/vazio → `ok: false` e o NOME em `missing`;
  *  - todas presentes → `ok: true` e `missing` vazio;
  *  - o `missing` nunca contém VALORES de segredo (apenas nomes) — Property 11;
- *  - o `docker-entrypoint.sh` contém a lógica de fail-fast que HALTA o start sem
- *    aplicar migrações parciais (Req. 18.8): `set -euo pipefail`, `exit 1` na
- *    falha de segredo e na falha de `prisma migrate deploy`.
+ *  - o `docker-entrypoint.sh` faz fail-fast do start (`set -euo pipefail`,
+ *    `exit 1` na falta de segredo) ANTES do `exec` (Req. 18.6);
+ *  - as migrações rodam num serviço `migrate` dedicado no
+ *    `docker-compose.prod.yml`, e o `app` só sobe após ele concluir com
+ *    sucesso — sem migração parcial (Req. 18.7, 18.8).
  */
 
 import { describe, it, expect } from "vitest";
@@ -97,7 +99,7 @@ describe("validateRequiredSecrets — não vazamento de segredos (Property 11 / 
   });
 });
 
-describe("docker-entrypoint.sh — fail-fast de start e migração (Req. 18.8)", () => {
+describe("docker-entrypoint.sh — fail-fast de start (Req. 18.6)", () => {
   const script = readFileSync(
     resolve(process.cwd(), "docker-entrypoint.sh"),
     "utf8",
@@ -112,19 +114,32 @@ describe("docker-entrypoint.sh — fail-fast de start e migração (Req. 18.8)",
     expect(script).toMatch(/exit 1/);
   });
 
-  it("aplica migrações com `prisma migrate deploy` ANTES de iniciar o app", () => {
-    expect(script).toContain("prisma migrate deploy");
-  });
-
-  it("aborta sem iniciar o app se a migração falhar (Req. 18.8)", () => {
-    // Bloco `if ! ... migrate deploy; then ... exit 1`.
-    expect(script).toMatch(/if\s+!\s+npx[^\n]*prisma migrate deploy/);
-  });
-
-  it("faz `exec` no CMD apenas após validação e migração", () => {
-    const migrateIdx = script.indexOf("prisma migrate deploy");
+  it("valida os segredos ANTES de fazer `exec` no CMD", () => {
+    // O bloco de validação de obrigatórios precede o start do servidor.
+    const missingIdx = script.indexOf("missing");
     const execIdx = script.indexOf('exec "$@"');
-    expect(migrateIdx).toBeGreaterThan(-1);
-    expect(execIdx).toBeGreaterThan(migrateIdx);
+    expect(missingIdx).toBeGreaterThan(-1);
+    expect(execIdx).toBeGreaterThan(missingIdx);
+  });
+});
+
+describe("docker-compose.prod.yml — migração via serviço dedicado (Req. 18.7, 18.8)", () => {
+  // As migrações NÃO rodam no entrypoint do app (o bundle standalone do Next
+  // não tem as deps do Prisma CLI). Rodam num serviço `migrate` com a imagem
+  // `worker` (node_modules completo), e o `app` só sobe após ele concluir com
+  // sucesso — garantindo que o app nunca serve com schema desatualizado.
+  const compose = readFileSync(
+    resolve(process.cwd(), "docker-compose.prod.yml"),
+    "utf8",
+  );
+
+  it("define um serviço `migrate` que roda `migrate deploy`", () => {
+    expect(compose).toMatch(/migrate:/);
+    expect(compose).toContain("migrate");
+    expect(compose).toContain("deploy");
+  });
+
+  it("faz `app` depender do `migrate` concluir com sucesso (sem migração parcial)", () => {
+    expect(compose).toMatch(/service_completed_successfully/);
   });
 });
