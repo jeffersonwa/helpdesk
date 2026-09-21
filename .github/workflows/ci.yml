@@ -1,0 +1,79 @@
+name: CI
+
+# Gate de qualidade — roda em todo push e pull request.
+# Não toca em produção: instala deps, valida lint/tipos, sobe um Postgres
+# efêmero, aplica as migrações e roda a suíte completa (unit + integração) e o
+# build. O deploy é responsabilidade do workflow separado `deploy.yml`, que só
+# roda depois deste passar na branch main.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+# Cancela execuções antigas do mesmo ref quando um novo push chega.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  quality:
+    name: Lint, typecheck, testes e build
+    runs-on: ubuntu-latest
+
+    # Postgres efêmero só para os testes de integração/property. Os testes
+    # pulam sozinhos (describe.skip) quando DATABASE_URL está ausente, mas aqui
+    # o fornecemos para exercitar a suíte inteira, sem depender de túnel/DB dev.
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: helpdesk
+          POSTGRES_PASSWORD: helpdesk
+          POSTGRES_DB: helpdesk_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U helpdesk -d helpdesk_test"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    env:
+      DATABASE_URL: postgresql://helpdesk:helpdesk@localhost:5432/helpdesk_test?schema=public
+      # Segredos mínimos para o build/boot; valores fake, só para CI.
+      NEXTAUTH_SECRET: ci-not-a-real-secret-000000000000000000000000
+      NEXTAUTH_URL: http://localhost:3000
+      NEXT_TELEMETRY_DISABLED: "1"
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Instalar dependências
+        run: npm ci
+
+      - name: Prisma generate
+        run: npx prisma generate
+
+      - name: Aplicar migrações no Postgres de teste
+        run: npx prisma migrate deploy
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Testes (unit + integração)
+        run: npm test
+
+      - name: Build
+        run: npm run build

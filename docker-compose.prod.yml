@@ -1,0 +1,166 @@
+# docker-compose de PRODUÇÃO — JÁ Helpdesk.
+#
+# Diferente do docker-compose.yml (dev/local, que faz `build:`), este consome
+# as imagens JÁ construídas e publicadas no GHCR pelo workflow de deploy. O
+# servidor não compila nada — apenas `pull` + `up -d`.
+#
+# Uso no servidor:
+#   IMAGE_TAG=<sha> docker compose -f docker-compose.prod.yml up -d
+# (o workflow deploy.yml exporta IMAGE_TAG=${{ github.sha }}; se ausente, cai
+#  para :latest.)
+#
+# SEGREDOS (Req. 18.5): nenhum valor literal aqui. Tudo vem do `.env` de
+# produção no servidor (git-ignored) via `env_file`.
+#
+# TLS / domínio: https://csc.nitecnologia.tec.br
+#
+# ---------------------------------------------------------------------------
+# PROXY REVERSO / TLS
+# ---------------------------------------------------------------------------
+# O serviço `app` NÃO publica portas no host por padrão — ele é exposto pela
+# rede do proxy. Há dois cenários (escolher um em docs/deploy.md):
+#
+#  (A) Já existe um Traefik no servidor (rede externa compartilhada). Então:
+#       - defina TRAEFIK_NETWORK com o nome dessa rede;
+#       - as labels abaixo publicam o roteador/tls para csc.nitecnologia.tec.br;
+#       - NÃO suba o serviço `traefik` deste arquivo (deixe o profile "edge" off).
+#
+#  (B) Não existe proxy e as portas 80/443 estão livres. Então suba o Traefik
+#      deste arquivo com o profile `edge`:
+#       docker compose -f docker-compose.prod.yml --profile edge up -d
+#
+# O IMAGE base do repositório (ex.: ghcr.io/OWNER/REPO) é injetado via ${IMAGE}.
+
+x-image: &image ${IMAGE:-ghcr.io/CHANGE_ME/helpdesk}
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    networks:
+      - internal
+
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    command: ["redis-server", "--save", "60", "1", "--appendonly", "no"]
+    volumes:
+      - redis-data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+      start_period: 5s
+    networks:
+      - internal
+
+  app:
+    image: ${IMAGE:-ghcr.io/CHANGE_ME/helpdesk}-app:${IMAGE_TAG:-latest}
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      NODE_ENV: production
+      PORT: "3000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "node",
+          "-e",
+          "fetch('http://localhost:3000/api/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))",
+        ]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 60s
+    networks:
+      - internal
+      - edge
+    labels:
+      # Roteamento Traefik (usado tanto no cenário A quanto no B).
+      - "traefik.enable=true"
+      - "traefik.docker.network=${TRAEFIK_NETWORK:-helpdesk_edge}"
+      - "traefik.http.routers.helpdesk.rule=Host(`csc.nitecnologia.tec.br`)"
+      - "traefik.http.routers.helpdesk.entrypoints=websecure"
+      - "traefik.http.routers.helpdesk.tls=true"
+      - "traefik.http.routers.helpdesk.tls.certresolver=le"
+      - "traefik.http.services.helpdesk.loadbalancer.server.port=3000"
+      # Redireciona HTTP → HTTPS.
+      - "traefik.http.routers.helpdesk-http.rule=Host(`csc.nitecnologia.tec.br`)"
+      - "traefik.http.routers.helpdesk-http.entrypoints=web"
+      - "traefik.http.routers.helpdesk-http.middlewares=helpdesk-redirect"
+      - "traefik.http.middlewares.helpdesk-redirect.redirectscheme.scheme=https"
+
+  worker:
+    image: ${IMAGE:-ghcr.io/CHANGE_ME/helpdesk}-worker:${IMAGE_TAG:-latest}
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      NODE_ENV: production
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      app:
+        condition: service_healthy
+    networks:
+      - internal
+
+  # Traefik próprio — SOMENTE cenário (B). Ative com `--profile edge`.
+  # No cenário (A) — já existe Traefik — NÃO ative este serviço.
+  traefik:
+    image: traefik:v3
+    profiles: ["edge"]
+    restart: unless-stopped
+    command:
+      - "--providers.docker=true"
+      - "--providers.docker.exposedbydefault=false"
+      - "--entrypoints.web.address=:80"
+      - "--entrypoints.websecure.address=:443"
+      - "--certificatesresolvers.le.acme.tlschallenge=true"
+      - "--certificatesresolvers.le.acme.email=${ACME_EMAIL:-admin@nitecnologia.tec.br}"
+      - "--certificatesresolvers.le.acme.storage=/letsencrypt/acme.json"
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - letsencrypt:/letsencrypt
+    networks:
+      - edge
+
+volumes:
+  postgres-data:
+  redis-data:
+  letsencrypt:
+
+networks:
+  # Rede interna: postgres/redis/worker/app conversam aqui, sem exposição.
+  internal:
+    driver: bridge
+  # Rede de borda: onde o proxy alcança o `app`. No cenário (A), declare-a como
+  # externa (a rede do Traefik existente) definindo TRAEFIK_NETWORK e ajustando
+  # este bloco para `external: true`.
+  edge:
+    name: ${TRAEFIK_NETWORK:-helpdesk_edge}
