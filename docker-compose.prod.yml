@@ -59,6 +59,26 @@ services:
     networks:
       - internal
 
+  # Serviço de MIGRAÇÃO (uso único). Usa a imagem `worker`, que carrega o
+  # node_modules COMPLETO (o Prisma CLI e suas deps transitivas, ex.: `effect`
+  # via @prisma/config — ausentes no bundle standalone do `app`). Aplica as
+  # migrações pendentes e sai. `app`/`worker` só sobem após ele concluir com
+  # sucesso, garantindo que o app nunca serve com schema desatualizado
+  # (Req. 18.7, 18.8). `migrate deploy` é idempotente.
+  migrate:
+    image: ${IMAGE:-ghcr.io/jeffersonwa/helpdesk}-worker:${IMAGE_TAG:-latest}
+    restart: "no"
+    env_file:
+      - .env
+    environment:
+      NODE_ENV: production
+    command: ["node", "node_modules/prisma/build/index.js", "migrate", "deploy"]
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - internal
+
   app:
     image: ${IMAGE:-ghcr.io/jeffersonwa/helpdesk}-app:${IMAGE_TAG:-latest}
     restart: unless-stopped
@@ -72,6 +92,8 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
     healthcheck:
       test:
         [
@@ -111,8 +133,9 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
-      app:
-        condition: service_healthy
+      # Sobe só depois das migrações (consome o schema já migrado).
+      migrate:
+        condition: service_completed_successfully
     networks:
       - internal
 

@@ -94,6 +94,21 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
+      # Sincroniza o compose de produção com a versão do repositório ANTES de
+      # subir, para que mudanças de orquestração (serviços, deps, redes) valham
+      # sem edição manual no servidor. O `.env` NÃO é tocado (segredos ficam só
+      # no servidor).
+      - name: Copia docker-compose.prod.yml para o servidor
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          port: ${{ secrets.SSH_PORT || 22 }}
+          source: docker-compose.prod.yml
+          target: ${{ secrets.DEPLOY_DIR }}
+          overwrite: true
+
       - name: Deploy no servidor via SSH
         uses: appleboy/ssh-action@v1
         with:
