@@ -381,12 +381,12 @@ A estratégia prioriza o **núcleo puro e testável** (`PriorityEngine`, `SlaEng
 - [x] 31. Checkpoint — serviços de backend e efeitos externos validados
   - Garantir que todos os testes passem; em caso de dúvidas, perguntar ao usuário.
 
-- [ ] 32. Implementar CRUD e atribuição de RBAC (backend + persistência)
-  - [ ] 32.1 Implementar serviço de papéis, permissões, escopos e atribuições
+- [x] 32. Implementar CRUD e atribuição de RBAC (backend + persistência)
+  - [x] 32.1 Implementar serviço de papéis, permissões, escopos e atribuições
     - Criar `src/lib/rbac/service.ts`: criar `RoleDef` (nome 1–100, 1–200 permissões, 0–50 escopos, vinculado ao tenant); rejeitar sem permissão/nome vazio/nome duplicado; papéis pré-definidos do design; atribuição via `RoleAssignment` vinculando escopos; rejeitar atribuição duplicada no mesmo escopo; `RoleDef` com `companyId` nulo é global
     - _Requisitos: 3.1, 3.2, 3.3, 3.4, 3.5, 3.6_
 
-  - [ ]* 32.2 Escrever testes do serviço de RBAC
+  - [x]* 32.2 Escrever testes do serviço de RBAC
     - Criação inválida (sem permissão/nome vazio/duplicado); atribuição duplicada; papel global
     - _Requisitos: 3.2, 3.5, 3.6_
 
