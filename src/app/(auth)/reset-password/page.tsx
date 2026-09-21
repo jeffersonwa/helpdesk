@@ -9,18 +9,32 @@ function ResetForm() {
   const searchParams = useSearchParams();
   const token = searchParams.get("token") ?? "";
 
-  const [valid, setValid] = useState<boolean | null>(null);
-  const [tokenError, setTokenError] = useState("");
+  // Resultado do fetch de verificação do token. Estado inicial `null`
+  // (verificando). O caso "sem token" é DERIVADO (abaixo), sem setState
+  // síncrono dentro do efeito — evita renders em cascata sinalizados pelo
+  // React Compiler / eslint-config-next.
+  const [fetched, setFetched] = useState<{ valid: boolean; error?: string } | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState(false);
 
   useEffect(() => {
-    if (!token) { setValid(false); setTokenError("Link inválido"); return; }
+    // Só dispara o efeito colateral (fetch) quando há token.
+    if (!token) return;
+    let cancelled = false;
     fetch(`/api/auth/reset-password?token=${token}`)
       .then((r) => r.json())
-      .then((d) => { setValid(d.valid); if (!d.valid) setTokenError(d.error); });
+      .then((d) => {
+        if (!cancelled) setFetched({ valid: !!d.valid, error: d.error });
+      });
+    return () => {
+      cancelled = true;
+    };
   }, [token]);
+
+  // Validação derivada: sem token → inválido; com token → aguarda o fetch.
+  const valid: boolean | null = !token ? false : fetched ? fetched.valid : null;
+  const tokenError = !token ? "Link inválido" : fetched?.error ?? "";
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
