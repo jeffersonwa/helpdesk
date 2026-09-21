@@ -74,27 +74,19 @@ openssl rand -base64 24   # POSTGRES_PASSWORD
 
 ## Proxy reverso / TLS
 
-O `app` não publica portas no host; é exposto pelo proxy na rede `edge`.
-Escolha **um** cenário:
+O servidor `148.113.236.231` já roda um **Traefik central** (container `traefik`)
+nas portas 80/443, servindo vários sistemas de clientes. Reusamos esse proxy —
+**não** subimos outro. O `app` entra na rede externa **`proxy_network`** (a do
+Traefik) e é roteado por labels (já configuradas em `docker-compose.prod.yml`):
 
-- **(A) Já existe Traefik no servidor** (recomendado se os sistemas dos clientes
-  já usam um): compartilhe a rede dele.
-  - Defina `TRAEFIK_NETWORK=<rede-do-traefik>` no `.env` e marque a rede `edge`
-    como `external: true` no compose.
-  - As labels Traefik do `app` publicam o host/TLS para `csc.nitecnologia.tec.br`.
-  - **Não** suba o serviço `traefik` deste arquivo (não use `--profile edge`).
+- entrypoint `websecure` (:443), TLS via certresolver `letsencrypt`;
+- o Traefik existente já redireciona HTTP→HTTPS globalmente;
+- `traefik.http.services.helpdesk.loadbalancer.server.port=3000`.
 
-- **(B) Não há proxy e as portas 80/443 estão livres**: suba o Traefik embutido:
+`postgres`/`redis`/`worker` ficam na rede `internal` privada, sem exposição.
 
-  ```bash
-  docker compose -f docker-compose.prod.yml --profile edge up -d
-  ```
-
-  Ele resolve TLS via Let's Encrypt (TLS-ALPN) para o domínio. Defina
-  `ACME_EMAIL` no `.env`.
-
-> Antes de escolher, verifique o que já roda: `docker ps`, `ss -tlnp | grep -E ':80 |:443 '`.
-> Nunca derrube um proxy que serve sistemas de clientes.
+> A rede `proxy_network` já existe no servidor (é externa a este compose). Não
+> precisa criá-la. Nunca derrube o Traefik nem os containers de clientes.
 
 ## Rollback
 
