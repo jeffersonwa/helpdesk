@@ -3,21 +3,8 @@ import { prisma } from "@/lib/prisma";
 import { sendEmail } from "@/lib/email";
 import { rateLimit, getClientIp } from "@/lib/rate-limit";
 import { nextTicketNumber } from "@/lib/tickets/sequence";
-import crypto from "crypto";
-
-function timingSafeEqual(a: string, b: string): boolean {
-  const bufA = Buffer.from(a);
-  const bufB = Buffer.from(b);
-  // Buffers de tamanhos diferentes quebrariam timingSafeEqual — compara
-  // contra um hash de tamanho fixo primeiro para não vazar o tamanho do secret.
-  if (bufA.length !== bufB.length) {
-    const hashA = crypto.createHash("sha256").update(bufA).digest();
-    const hashB = crypto.createHash("sha256").update(bufB).digest();
-    crypto.timingSafeEqual(hashA, hashB); // consome tempo constante, resultado descartado
-    return false;
-  }
-  return crypto.timingSafeEqual(bufA, bufB);
-}
+import { createEnvEmailSignatureVerifier } from "@/lib/channels/wiring";
+import { lowercaseHeaders } from "@/lib/channels/http";
 
 export async function POST(req: NextRequest) {
   const secret = process.env.RESEND_WEBHOOK_SECRET;
@@ -35,18 +22,26 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Too many requests" }, { status: 429 });
   }
 
-  // Autenticação via token no header ou query param
-  const token = req.headers.get("x-webhook-token")
-    ?? req.nextUrl.searchParams.get("token")
-    ?? "";
+  // Lê o corpo BRUTO uma única vez — a assinatura Svix (Resend) é sobre o body
+  // exato, então precisamos verificar ANTES de qualquer parse.
+  const rawBody = await req.text();
 
-  if (!timingSafeEqual(token, secret)) {
+  // Autenticação: aceita a assinatura Svix oficial do Resend (cabeçalhos
+  // svix-*) OU o token compartilhado legado (x-webhook-token / ?token=).
+  // A verificação Svix/token vive em `createEnvEmailSignatureVerifier`.
+  const verify = createEnvEmailSignatureVerifier(process.env);
+  const authorized = verify({
+    method: "POST",
+    headers: lowercaseHeaders(req.headers),
+    query: Object.fromEntries(req.nextUrl.searchParams),
+    rawBody,
+  });
+  if (!authorized) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
   let payload: any;
   try {
-    const rawBody = await req.text();
     payload = JSON.parse(rawBody);
   } catch {
     return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });

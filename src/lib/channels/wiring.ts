@@ -247,7 +247,7 @@ export function defaultWhatsAppAccountRef(
 // E-MAIL (v2) — verificação de assinatura do provedor (Req 7.1/7.2)
 // ===========================================================================
 
-import { timingSafeEqual as nodeTimingSafeEqual, createHash } from "node:crypto";
+import { timingSafeEqual as nodeTimingSafeEqual, createHash, createHmac } from "node:crypto";
 
 import type { RawRequest } from "@/lib/channels/adapter";
 import {
@@ -298,13 +298,81 @@ export function createEnvEmailSignatureVerifier(
       // Fail-closed: sem segredo, nada é aceito.
       return false;
     }
-    const token =
-      req.headers["x-webhook-token"] ?? req.query["token"] ?? "";
+
+    // (1) Assinatura Svix (padrão do Resend): se os cabeçalhos svix-* estão
+    // presentes, exigimos a verificação HMAC — é o caminho seguro e preferido.
+    const hasSvix =
+      typeof req.headers["svix-signature"] === "string" &&
+      typeof req.headers["svix-id"] === "string" &&
+      typeof req.headers["svix-timestamp"] === "string";
+    if (hasSvix) {
+      return verifySvixSignature(req, secret);
+    }
+
+    // (2) Fallback (compatibilidade): TOKEN compartilhado no header
+    // `x-webhook-token` ou query `token`, comparado em tempo constante.
+    const token = req.headers["x-webhook-token"] ?? req.query["token"] ?? "";
     if (typeof token !== "string" || token.length === 0) {
       return false;
     }
     return constantTimeEqual(token, secret);
   };
+}
+
+/**
+ * Verifica a assinatura de webhook no padrão **Svix** (usado pelo Resend).
+ *
+ * O provedor envia três cabeçalhos:
+ *   - `svix-id`         → id da mensagem;
+ *   - `svix-timestamp`  → epoch em segundos;
+ *   - `svix-signature`  → uma ou mais assinaturas `v1,<base64>` separadas por espaço.
+ *
+ * A assinatura é `HMAC-SHA256(chave, "{id}.{timestamp}.{rawBody}")` em base64,
+ * onde a CHAVE são os bytes de base64 da parte após o prefixo `whsec_` do
+ * segredo. Aceitamos se QUALQUER assinatura `v1` conferir (comparação em tempo
+ * constante). Também validamos a janela de tolerância do timestamp (5 min) para
+ * mitigar replay.
+ */
+function verifySvixSignature(req: RawRequest, secret: string): boolean {
+  try {
+    const id = req.headers["svix-id"];
+    const timestamp = req.headers["svix-timestamp"];
+    const sigHeader = req.headers["svix-signature"];
+    if (
+      typeof id !== "string" ||
+      typeof timestamp !== "string" ||
+      typeof sigHeader !== "string"
+    ) {
+      return false;
+    }
+
+    // Tolerância de replay: timestamp dentro de ±5 minutos.
+    const ts = Number(timestamp);
+    if (!Number.isFinite(ts)) return false;
+    const nowSec = Math.floor(Date.now() / 1000);
+    if (Math.abs(nowSec - ts) > 5 * 60) return false;
+
+    // Chave HMAC: base64 da parte após `whsec_`.
+    const keyB64 = secret.startsWith("whsec_") ? secret.slice("whsec_".length) : secret;
+    const key = Buffer.from(keyB64, "base64");
+    if (key.length === 0) return false;
+
+    const signedContent = `${id}.${timestamp}.${req.rawBody}`;
+    const expected = createHmac("sha256", key).update(signedContent, "utf8").digest("base64");
+
+    // O header pode conter várias assinaturas: "v1,<b64> v1,<b642>".
+    const parts = sigHeader.split(" ");
+    for (const part of parts) {
+      const comma = part.indexOf(",");
+      const value = comma >= 0 ? part.slice(comma + 1) : part;
+      if (value.length === expected.length && constantTimeEqual(value, expected)) {
+        return true;
+      }
+    }
+    return false;
+  } catch {
+    return false;
+  }
 }
 
 /**

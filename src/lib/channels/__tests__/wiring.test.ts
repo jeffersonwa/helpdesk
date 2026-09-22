@@ -11,7 +11,7 @@
  *   - resolvedor de token de formulário público.
  */
 
-import { createHash } from "node:crypto";
+import { createHash, createHmac } from "node:crypto";
 
 import { describe, expect, it, vi } from "vitest";
 
@@ -139,6 +139,52 @@ describe("createEnvEmailSignatureVerifier", () => {
   it("sem secret configurado → false (fail-closed)", () => {
     const verify = createEnvEmailSignatureVerifier({});
     expect(verify(mkReq("qualquer"))).toBe(false);
+  });
+
+  // --- Assinatura Svix (padrão do Resend) ---
+  const svixSecretB64 = Buffer.from("chave-super-secreta-svix").toString("base64");
+  const svixSecret = `whsec_${svixSecretB64}`;
+
+  function svixReq(body: string, ts: number, sign = true, id = "msg_123"): RawRequest {
+    const key = Buffer.from(svixSecretB64, "base64");
+    const signed = `${id}.${ts}.${body}`;
+    const sig = createHmac("sha256", key).update(signed, "utf8").digest("base64");
+    return {
+      method: "POST",
+      headers: {
+        "svix-id": id,
+        "svix-timestamp": String(ts),
+        "svix-signature": sign ? `v1,${sig}` : "v1,assinatura-errada",
+      },
+      query: {},
+      rawBody: body,
+    };
+  }
+
+  it("Svix: assinatura válida dentro da janela → true", () => {
+    const verify = createEnvEmailSignatureVerifier({ RESEND_WEBHOOK_SECRET: svixSecret });
+    const now = Math.floor(Date.now() / 1000);
+    expect(verify(svixReq('{"from":"a@b.com"}', now))).toBe(true);
+  });
+
+  it("Svix: assinatura inválida → false", () => {
+    const verify = createEnvEmailSignatureVerifier({ RESEND_WEBHOOK_SECRET: svixSecret });
+    const now = Math.floor(Date.now() / 1000);
+    expect(verify(svixReq('{"from":"a@b.com"}', now, false))).toBe(false);
+  });
+
+  it("Svix: timestamp fora da janela (replay) → false", () => {
+    const verify = createEnvEmailSignatureVerifier({ RESEND_WEBHOOK_SECRET: svixSecret });
+    const old = Math.floor(Date.now() / 1000) - 60 * 60; // 1h atrás
+    expect(verify(svixReq('{"from":"a@b.com"}', old))).toBe(false);
+  });
+
+  it("Svix: corpo adulterado → false", () => {
+    const verify = createEnvEmailSignatureVerifier({ RESEND_WEBHOOK_SECRET: svixSecret });
+    const now = Math.floor(Date.now() / 1000);
+    const req = svixReq('{"from":"a@b.com"}', now);
+    req.rawBody = '{"from":"atacante@b.com"}'; // muda o corpo após assinar
+    expect(verify(req)).toBe(false);
   });
 });
 
