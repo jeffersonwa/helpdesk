@@ -4,7 +4,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { signOut } from "next-auth/react";
-import { Home, BookOpen, Ticket, LogOut } from "lucide-react";
+import { Home, BookOpen, Ticket, LogOut, HelpCircle } from "lucide-react";
 
 /**
  * Cabeçalho leve do portal de autoatendimento (tarefa 34.1).
@@ -17,6 +17,7 @@ const navLinks = [
   { href: "/portal", label: "Início", icon: Home },
   { href: "/portal/kb", label: "Base de conhecimento", icon: BookOpen },
   { href: "/portal/tickets", label: "Meus chamados", icon: Ticket },
+  { href: "/portal/ajuda", label: "Ajuda", icon: HelpCircle },
 ];
 
 export default function PortalHeader({

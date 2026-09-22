@@ -32,3 +32,4 @@ export const ArrowRight: LucideIcon;
 export const ArrowLeft: LucideIcon;
 export const Search: LucideIcon;
 export const AlertTriangle: LucideIcon;
+export const HelpCircle: LucideIcon;

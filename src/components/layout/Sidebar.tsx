@@ -17,6 +17,7 @@ import {
   BookOpen,
   ShieldCheck,
   Radio,
+  HelpCircle,
 } from "lucide-react";
 
 const links = [
@@ -28,6 +29,7 @@ const links = [
   { href: "/users", label: "Usuários", icon: Users, roles: ["ADMIN", "SUPERADMIN"] },
   { href: "/companies", label: "Empresas", icon: Building2, roles: ["SUPERADMIN"] },
   { href: "/reports", label: "Relatórios", icon: BarChart2, roles: ["ADMIN", "SUPERADMIN", "AGENT"] },
+  { href: "/help", label: "Ajuda", icon: HelpCircle, roles: ["ADMIN", "SUPERADMIN", "SERVICE_MANAGER", "SUPERVISOR", "AGENT"] },
 ];
 
 // Seção Admin — gated por ADMIN/SUPERADMIN (UX; autorização real é no backend).
